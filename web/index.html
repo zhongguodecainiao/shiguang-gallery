@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0e0e10"><title>拾光图库 · v 1.0.0</title><link rel="icon" type="image/x-icon" href="/favicon.ico?v=1.0.0"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/stitch-theme.css"><link rel="stylesheet" href="/beta8.css"><link rel="stylesheet" href="/beta9.css"></head>
+<body>
+<div class="app-topbar">
+  <div class="brand"><img class="brand-mark" src="/brand-icon.png" width="40" height="40" alt=""><div><span id="brandName" data-brand></span><small id="brandTagline" data-brand></small></div></div>
+  <button id="updateCheck" class="app-version" title="检查更新">v 1.0.0 · 检查更新</button>
+</div>
+<aside class="sidebar">
+  <div class="nav-label">你的照片</div>
+  <nav><button data-view="all" class="nav-item active"><span class="material-symbols-outlined" aria-hidden="true">photo_library</span>全部照片<b id="allCount">—</b></button><button data-view="favorites" class="nav-item"><span class="material-symbols-outlined" aria-hidden="true">favorite</span>个人收藏<b id="favoriteCount">—</b></button><button data-view="folders" class="nav-item"><span class="material-symbols-outlined" aria-hidden="true">folder</span>文件夹</button><button data-view="albums" class="nav-item"><span class="material-symbols-outlined" aria-hidden="true">collections</span>我的相册</button></nav>
+  <div class="nav-label album-label">相册<button id="newAlbumSide" class="icon-button material-symbols-outlined" title="新建相册" aria-label="新建相册">add</button></div>
+  <div id="albumNav" class="album-nav"></div>
+  <button id="languageButton" class="language-button" title="语言 / Language"><span class="material-symbols-outlined" aria-hidden="true">language</span><span class="language-button-label">语言 / Language</span></button>
+  <button id="sourceSettings" class="source-settings" aria-label="设置照片来源"><span class="material-symbols-outlined" aria-hidden="true">settings</span>照片来源</button>
+  <button id="showReleaseNotes" class="release-entry" aria-label="查看本次版本更新说明">更新说明 <small>v 1.0.0</small></button>
+  <div id="releaseHistory" class="release-history" role="region" aria-label="所有测试版更新记录" tabindex="0"></div>
+  <div class="source"><span class="source-dot"></span><div>本机照片<small id="rootPath">正在读取照片目录…</small></div><button id="refresh" class="icon-button material-symbols-outlined" title="重新扫描文件夹" aria-label="刷新图库">refresh</button></div>
+</aside>
+<main>
+  <header><div><div class="eyebrow" id="eyebrow">每一个瞬间，都在这里</div><h1 id="title">全部照片</h1><p id="subtitle">正在读取你的照片…</p></div><div class="header-actions"><button id="sourceSettingsTop" class="secondary">照片来源</button><button id="newAlbum" class="primary"><span class="material-symbols-outlined" aria-hidden="true">add</span>新建相册</button><button id="albumMore" class="secondary hidden">相册设置</button></div></header>
+  <div class="toolbar"><label class="search"><span class="material-symbols-outlined" aria-hidden="true">search</span><input id="search" type="search" placeholder="搜索照片、文件夹或日期" aria-label="搜索照片"></label><div class="segmented" id="kindFilter"><button data-kind="" class="active">全部格式</button><button data-kind="图片">图片</button><button data-kind="RAW">RAW</button></div><button id="filterToggle" class="secondary" aria-expanded="false" aria-controls="filterPanel"><span class="material-symbols-outlined" aria-hidden="true">tune</span>筛选</button><select id="sort" aria-label="排列方式"><option value="newest">日期从新到旧</option><option value="oldest">日期从旧到新</option></select></div>
+  <div id="filterPanel" class="filter-panel hidden" aria-label="筛选全部照片"><div class="filter-facets" id="filterFacets"></div><div class="filter-panel-footer"><span>可勾选多个选项，再选择只看所选或排除所选；不同类别的条件同时生效。</span><button id="clearFilters" class="secondary">清除筛选</button><span id="filterIndexStatus" role="status"></span></div></div>
+  <div id="scanBanner" class="scan-banner hidden" role="status"></div>
+
+  <section id="photoTools" class="photo-tools hidden" aria-label="照片操作"><div class="photo-tools-heading"><span>照片操作</span><button id="selectMode" class="primary">选择照片</button></div>
+    <div id="selectionBar" class="selection-bar hidden"><span id="selectedCount">已选 0 张</span><button id="selectLoaded">选择已加载照片</button><button id="clearSelection">取消选择</button><div class="spacer"></div><button id="removeFromAlbum" class="hidden">从此相册移除</button><button id="copySelected">复制</button><button id="shareSelected">分享 ZIP</button><button id="deleteSelected" class="danger">删除原照片</button><button id="addToAlbum" class="primary">加入相册</button></div>
+  </section>
+  <div class="gallery-workspace"><div class="gallery-list"><div id="content" aria-live="polite"></div><div id="sentinel"></div><button id="loadMore" class="load-more hidden">加载更多照片</button>
+  <footer><span>照片留在原处 · 相册只记录归属</span><span id="footerCount"></span></footer></div>
+  <aside id="galleryInspector" class="gallery-inspector" aria-label="照片信息"><div class="inspector-heading">照片信息</div><div class="inspector-photo"><img id="inspectorImage" alt=""><div class="inspector-photo-caption"><strong id="inspectorName"></strong><span id="inspectorPosition"></span></div></div><div class="inspector-section"><div class="inspector-section-title">颜色直方图</div><canvas id="inspectorHistogram" width="560" height="210" role="img" aria-label="当前照片预览的 RGB 和亮度直方图"></canvas></div><div class="inspector-section"><div class="inspector-section-title">文件信息</div><dl id="inspectorDetails"></dl></div><div class="inspector-section"><div class="inspector-section-title">拍摄参数</div><dl id="inspectorCapture"></dl></div></aside></div>
+  <div id="photoContextMenu" class="photo-context-menu hidden" role="menu" aria-label="照片操作"></div>
+</main>
+<div id="toast" role="status"></div>
+<dialog id="languageDialog" aria-labelledby="languageTitle"><h2 id="languageTitle">语言 / Language</h2><p>选择界面语言，立即生效并保存在本机。</p><label class="field-label">界面语言<select id="languageSelect" aria-label="界面语言"></select></label><p id="languageError" class="error" role="alert"></p><div class="dialog-actions"><button class="primary" data-close="languageDialog">完成</button></div></dialog>
+<dialog id="releaseDialog" aria-labelledby="releaseTitle" aria-describedby="releaseSummary">
+  <div class="release-heading"><span class="release-badge" id="releaseVersion"></span><button id="releaseClose" class="icon-button" aria-label="关闭更新说明" autofocus>×</button></div>
+  <h2 id="releaseTitle">本次更新</h2><p id="releaseSummary"></p>
+  <div id="releaseSections"></div>
+  <div id="releaseArchive" class="release-archive"></div>
+  <div class="release-footer"><span>以后可在侧栏“更新说明”中查看</span><button id="releaseDone" class="primary">开始浏览</button></div>
+</dialog>
+<dialog id="updateDialog" aria-labelledby="updateTitle"><div class="release-heading"><span class="release-badge">更新通道</span><button id="updateClose" class="icon-button" aria-label="关闭更新窗口">×</button></div><h2 id="updateTitle">检查更新</h2><p id="updateStatus" role="status">正在连接更新服务器…</p><div id="updateDetails" class="update-details"></div><div class="dialog-actions"><button id="updateDownload" class="primary" disabled>打开下载地址</button><button id="updateDone" class="secondary">完成</button></div></dialog>
+<div id="folderContextMenu" class="folder-context-menu hidden" role="menu"><button id="folderContextRename" role="menuitem">重命名文件夹</button></div>
+<dialog id="renameFolderDialog" aria-labelledby="renameFolderTitle"><form id="renameFolderForm"><h2 id="renameFolderTitle">重命名文件夹</h2><p>会更改磁盘上的实际文件夹名称，其他软件中保存的旧路径可能需要重新定位。</p><p id="renameFolderPath" class="muted"></p><label class="field-label">文件夹名称<input id="renameFolderName" maxlength="120" required autocomplete="off"></label><p id="renameFolderError" class="error" role="alert"></p><div class="dialog-actions"><button type="button" class="secondary" data-close="renameFolderDialog">取消</button><button id="saveFolderName" type="submit" class="primary">保存名称</button></div></form></dialog>
+<dialog id="albumDialog"><form id="albumForm"><div class="dialog-eyebrow">留住同一个主题</div><h2 id="albumDialogTitle">新建相册</h2><p>相册不会复制或移动照片，你可以把一张照片放进多个相册。</p><label class="field-label">相册名称<input id="albumName" maxlength="80" required placeholder="例如：旅行的片刻" autocomplete="off"></label><p id="albumFormError" class="error"></p><div class="dialog-actions"><button type="button" class="secondary" data-close="albumDialog">取消</button><button type="submit" class="primary">保存相册</button></div></form></dialog>
+<dialog id="addDialog"><div class="dialog-eyebrow">整理，而不搬动</div><h2>加入相册</h2><p id="addDescription"></p><div id="albumChoices"></div><button id="createAndAdd" class="wide secondary">＋ 新建相册并加入</button><div class="dialog-actions"><button class="secondary" data-close="addDialog">取消</button></div></dialog>
+<dialog id="settingsDialog"><h2>相册设置</h2><p id="albumSettingsName"></p><button id="renameAlbum" class="wide secondary">重命名相册</button><button id="deleteAlbum" class="wide danger">删除这个虚拟相册</button><p class="muted">删除相册只移除分组记录，原照片和其他相册都保留。</p><div class="dialog-actions"><button class="secondary" data-close="settingsDialog">完成</button></div></dialog>
+<dialog id="confirmDialog"><h2>删除相册？</h2><p>只删除这个虚拟相册及它的分组记录，不删除任何照片文件。</p><div class="dialog-actions"><button class="secondary" data-close="confirmDialog">取消</button><button id="confirmDeleteAlbum" class="danger">删除相册</button></div></dialog>
+<dialog id="viewer"><div id="viewerSurface"><div class="viewer-top"><div><strong id="viewerName"></strong><small id="viewerIndex"></small></div><div id="fullscreenMeta" class="fullscreen-meta" aria-label="全屏照片与缩略图说明"></div><div><button id="viewerLanguageButton" class="material-symbols-outlined" title="语言 / Language" aria-label="语言 / Language">language</button><button id="viewerFavorite" class="material-symbols-outlined" title="收藏" aria-label="收藏照片">favorite_border</button><button id="viewerAdd" class="material-symbols-outlined" title="加入相册" aria-label="加入相册">add_to_photos</button><button id="viewerCopy" class="viewer-text" aria-label="复制照片">复制</button><button id="viewerShare" class="viewer-text" aria-label="分享照片">分享</button><button id="viewerDelete" class="viewer-text" aria-label="删除原照片">删除</button><button id="viewerSizeMode" class="viewer-text" title="切换预览大小（F）" aria-label="切换预览大小（F）" aria-pressed="false">适应屏幕</button><button id="viewerZoom" class="material-symbols-outlined" title="全屏预览" aria-label="全屏预览" aria-pressed="false">fullscreen</button><button id="viewerClose" class="material-symbols-outlined" title="关闭" aria-label="关闭照片">close</button></div></div><div class="viewer-body"><div class="viewer-left"><div class="viewer-selection" aria-label="大图照片多选">
+<button id="viewerSelectCurrent" aria-pressed="false">□ 选择当前照片</button><button id="viewerSelectMode" aria-pressed="false">多选缩略图</button><span id="viewerSelectedCount" role="status">已选 0 张</span><button id="viewerClearSelection" disabled>清空选择</button><button id="viewerAddSelected" disabled>加入相册</button>
+</div><div class="viewer-image-row"><button id="previous" class="viewer-arrow" aria-label="上一张">‹</button><div id="imageStage"><img id="fullImage" alt=""><div id="previewError" class="hidden">这张照片暂时无法预览。<small>原文件仍在，你可以在文件夹中查看。</small></div></div><button id="next" class="viewer-arrow" aria-label="下一张">›</button></div><div id="viewerDock" class="viewer-dock"><div class="image-quality-bar" aria-label="图片清晰度"><div class="quality-buttons"><button id="qualityFast" class="active" aria-pressed="true">快速预览</button><button id="qualityFull" aria-pressed="false">原图细节</button><button id="zoomActual" title="加载完整分辨率，按 1 个图像像素对应 1 个屏幕像素显示">100%</button></div><span id="viewResolution" role="status">正在读取预览…</span></div><section class="photo-seek-panel" aria-label="照片浏览进度">
+<div class="seek-caption"><span id="seekDate"></span><span class="seek-hint" id="seekHint">悬停放大 · 点击或拖动松开切换 · 滚轮浏览缩略图</span><span id="seekPosition"></span></div>
+<div id="photoSeekWrap">
+<div id="seekFan" class="seek-fan hidden" aria-hidden="true"></div>
+<div class="film-row"><button id="filmEarlier" class="film-page" aria-label="更早位置的缩略图" title="上一组缩略图">‹</button><div id="filmRail" aria-label="附近照片缩略图"></div><button id="filmLater" class="film-page" aria-label="更后位置的缩略图" title="下一组缩略图">›</button></div>
+<div class="film-caption"><span id="filmWindow"></span><button id="filmReturn" title="让当前大图对应的缩略图回到正中央">回到当前照片</button><span id="seekPreviewName"></span><span id="seekPreviewMeta"></span></div>
+<div class="whole-seek"><span id="seekScope">全图库定位</span><div class="seek-axis"><input id="photoSeek" type="range" min="0" max="0" value="0" step="1" aria-label="全图库照片浏览进度" aria-describedby="seekHint"><div id="seekTimeline" aria-label="照片日期坐标"></div></div></div>
+</div></section></div></div><button id="infoToggle" class="info-toggle" aria-controls="photoInfo" aria-expanded="true" title="收起照片信息" aria-label="收起照片信息">›</button><aside id="photoInfo" class="photo-info"><div class="info-title">照片信息</div>
+<section class="histogram-panel" aria-label="颜色直方图"><div class="histogram-heading"><span>颜色直方图</span><label><input id="histogramLog" type="checkbox">对数</label></div><canvas id="histogramCanvas" width="560" height="240" role="img" aria-label="当前照片预览的 RGB 和亮度直方图"></canvas><div class="histogram-axis"><span>暗部 · 0</span><span>中间调</span><span>255 · 高光</span></div><div class="histogram-legend"><span class="red">● R</span><span class="green">● G</span><span class="blue">● B</span><span>— 亮度</span></div><p id="histogramStatus" class="histogram-note">正在读取预览…</p></section>
+<div class="info-section-title">拍摄参数</div><dl id="captureDetails" class="capture-details"></dl><p id="captureNote" class="metadata-note"></p>
+<div class="info-section-title">文件信息</div><dl id="photoDetails"></dl><button id="reveal" class="secondary">在文件夹中显示</button><p class="preview-note">快速预览便于翻图；点击“原图细节”从 RAW 原始数据完整解码，或读取普通图片原文件。RAW 显示为全分辨率 RGB 画面，不包含 Lightroom 调整，颜色可能与相机或 Lightroom 不同。</p></aside></div><button id="fullscreenReveal" title="显示浏览控制栏" aria-label="显示浏览控制栏">⌃</button></div></dialog>
+<dialog id="copyDialog">
+  <h2>复制照片</h2><p id="copyDescription"></p>
+  <button id="copyImageClipboard" class="primary wide">复制图片到剪贴板</button>
+  <p id="copyClipboardNote">复制后，在聊天输入框按 Ctrl+V 粘贴。RAW 复制浏览预览；动图复制当前首帧。</p>
+  <button id="copyToFolder" class="secondary wide">复制原文件到文件夹…</button>
+  <p>保留完整原文件，适合备份或批量复制。</p>
+  <p id="copyError" class="error" role="alert"></p>
+  <div class="dialog-actions"><button class="secondary" data-close="copyDialog">取消</button></div>
+</dialog>
+<dialog id="sourceDialog" aria-labelledby="sourceTitle"><form id="sourceForm">
+<h2 id="sourceTitle">照片来源</h2><p>选择要浏览的照片位置。原照片保持原位，每种来源分别保存相册和收藏。</p>
+<label class="source-toggle"><input id="sourceAll" type="checkbox" role="switch"><span>浏览本机所有照片<small>开启后选择磁盘，关闭后选择一个照片文件夹</small></span></label>
+<p class="source-mode-note">每次开启或关闭后，都需重新选择浏览范围；点击“应用并浏览”后生效。</p>
+<div id="sourceFolderFields"><label class="field-label">照片文件夹<input id="sourceFolderPath" placeholder="例如 D:\照片" autocomplete="off"></label><button id="sourceBrowse" type="button" class="secondary">浏览照片文件夹…</button></div>
+<div id="sourceDriveFields" class="hidden"><div class="source-drive-heading"><span>选择要扫描的磁盘</span><button id="sourceRecommended" type="button" class="secondary">选中建议磁盘</button></div><div id="sourceDriveChoices"></div><p>只扫描勾选的本机固定磁盘，跳过系统、程序、缓存、回收站及 Lightroom 预览目录。首次扫描可能较久，可以边扫描边浏览。G 盘默认不选。</p></div>
+<p id="sourceSelection" role="status"></p><p id="sourceError" class="error" role="alert"></p><div class="dialog-actions"><button type="button" class="secondary" data-close="sourceDialog">取消</button><button type="submit" class="primary" id="applySource">应用并浏览</button></div>
+</form></dialog>
+<dialog id="folderDialog" aria-labelledby="folderDialogTitle">
+  <h2 id="folderDialogTitle">选择保存文件夹</h2><p>打开目标文件夹后，点击“使用此文件夹”。</p>
+  <div id="folderRoots" class="folder-roots"></div>
+  <form id="folderPathForm" class="folder-path-row"><input id="folderPathInput" aria-label="文件夹路径" placeholder="例如 E:\资料库"><button class="secondary" type="submit">前往</button></form>
+  <div class="folder-location"><button id="folderUp" class="secondary">↑ 上一级</button><span id="folderCurrent"></span></div>
+  <div id="folderList" class="folder-list" aria-label="子文件夹列表"></div><p id="folderError" class="error" role="status"></p>
+  <div class="dialog-actions"><button class="secondary" data-close="folderDialog">取消</button><button id="useFolder" class="primary" disabled>使用此文件夹</button></div>
+</dialog>
+<dialog id="fileDialog">
+  <h2 id="fileTitle"></h2><p id="fileDescription"></p>
+  <ul id="fileNames" class="file-names"></ul>
+  <div id="fileDestination"><label class="field-label">保存到<input id="destinationPath" placeholder="例如 E:\照片副本" autocomplete="off"></label><button id="browseDestination" class="secondary">浏览文件夹…</button></div>
+  <p id="fileWarning"></p><p id="fileError" class="error" role="alert"></p>
+  <div class="dialog-actions"><button class="secondary" data-close="fileDialog">取消</button><button id="confirmFile" class="primary"></button></div>
+</dialog>
+<dialog id="jobDialog"><h2 id="jobTitle">正在处理照片</h2><p id="jobStatus" role="status"></p><progress id="jobProgress" value="0" max="1"></progress><p id="jobOutput" class="output-path"></p><ul id="jobErrors" class="file-names error"></ul><div class="dialog-actions"><button id="showFileOutput" class="secondary hidden">打开所在文件夹</button><button id="jobDone" class="primary" disabled>处理中…</button></div></dialog>
+<script src="/locales.js"></script><script src="/i18n.js"></script><script src="/histogram.js"></script><script src="/app.js"></script><script src="/interactions.js"></script><script src="/viewer-navigation.js"></script><script src="/viewer-layout.js"></script><script src="/folder-rename.js"></script><script src="/photo-grid-actions.js"></script><script src="/release-notes.js"></script></body></html>

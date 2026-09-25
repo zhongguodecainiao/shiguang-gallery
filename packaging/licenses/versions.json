@@ -1,0 +1,37 @@
+{
+  "Pillow": "12.3.0",
+  "pillow-heif": "1.7.0",
+  "rawpy": "0.27.1",
+  "numpy": "2.5.3",
+  "pywin32": "312",
+  "ExifRead": "3.5.1",
+  "Send2Trash": "2.1.0",
+  "pypng": "0.20220715.0",
+  "pyinstaller": "6.22.3",
+  "pywebview": "6.2.1",
+  "pythonnet": "3.1.0",
+  "clr-loader": "0.3.1",
+  "bottle": "0.13.4",
+  "proxy-tools": "0.1.0",
+  "cffi": "2.1.1",
+  "pycparser": "3.0",
+  "Python": "3.12.14",
+  "LibRaw": [
+    0,
+    22,
+    1
+  ],
+  "HEIF": {
+    "libheif": "1.23.3",
+    "HEIF": "x265 HEVC encoder (4.3+1-e9b8812)",
+    "AVIF": "",
+    "encoders": {
+      "x265": "x265 HEVC encoder (4.3+1-e9b8812)",
+      "mask": "mask"
+    },
+    "decoders": {
+      "libde265": "libde265 HEVC decoder, version 1.1.1"
+    }
+  },
+  "NSIS": "3.12"
+}
