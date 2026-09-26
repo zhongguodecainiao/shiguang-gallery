@@ -15,7 +15,7 @@ from full_resolution import FullResolution
 from app_paths import launch_paths
 from photo_sources import SourceManager, source_key, SKIP_DIRECTORIES
 from release_notes import ReleaseNotes
-from update_channel import UpdateChannel
+from update_channel import CURRENT_VERSION, DISPLAY_VERSION, UpdateChannel
 from ui_preferences import UIPreferences
 from folder_actions import rename_folder
 from photo_filters import origin_category, capture_facets, append_filter_clauses
@@ -344,6 +344,7 @@ class Handler(BaseHTTPRequestHandler):
             if url.path=='/api/overview':g.last_seen=time.monotonic();return self.reply(200,g.overview())
             if url.path=='/api/source':return self.reply(200,self.server.sources.describe())
             if url.path=='/api/preferences':return self.reply(200,self.server.preferences.read())
+            if url.path=='/api/app-info':return self.reply(200,{'version':CURRENT_VERSION,'display_version':DISPLAY_VERSION})
             if url.path=='/api/updates':return self.reply(200,self.server.updates.describe())
             if url.path=='/api/update-check':return self.reply(200,self.server.update_channel.check())
             if url.path=='/api/update-status':return self.reply(200,self.server.update_channel.install_status())
@@ -431,7 +432,7 @@ def open_window(url, control, server=None):
     storage=Path(os.environ.get('LOCALAPPDATA',str(Path.home()/'AppData/Local')))/'ShiguangGallery'/'webview2'
     storage.mkdir(parents=True,exist_ok=True)
     native_api=NativeWindowAPI()
-    window=webview.create_window('拾光图库 · v 1.0.3',url,width=1440,height=940,
+    window=webview.create_window(f'拾光图库 · {DISPLAY_VERSION}',url,width=1440,height=940,
                                  min_size=(760,600),background_color='#0e0e10',
                                  text_select=True,zoomable=False,js_api=native_api)
     native_api._window=window

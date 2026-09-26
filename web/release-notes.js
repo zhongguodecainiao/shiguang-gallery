@@ -29,7 +29,7 @@
     if (dialog.open) return;
     current = release;
     opened = true;
-    I18n.text($('#releaseVersion'), release.version === '1.0.3' ? 'v 1.0.3' : release.version);
+    I18n.text($('#releaseVersion'), `v ${release.version}`);
     I18n.text($('#releaseSummary'), T(release.summary));
     $('#releaseSections').replaceChildren(...sections(release.sections));
     paintHistory(release);
