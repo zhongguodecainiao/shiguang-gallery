@@ -19,6 +19,10 @@ Install Python 3.12 x64 and NSIS 3.12, then run:
 
 The build downloads Python dependencies from PyPI. The resulting installer is published through the [release repository](https://github.com/zhongguodecainiao/shiguang-gallery-updates/releases).
 
+## Automated Windows build
+
+GitHub Actions builds the Windows application and installer on pushes to `main`, or when started manually from the Actions tab. The unsigned installer, source archive, release notes, and SHA-256 file are saved as a workflow artifact for 14 days. Releases remain unsigned until a signing request is approved and completed.
+
 ## Privacy
 
 The application does not upload photos, albums, or other user content. When a user explicitly chooses to check for updates, it retrieves a public version manifest; opening a download link is also initiated by the user.
