@@ -33,7 +33,8 @@ jobs:
       - name: Build application and installer
         shell: pwsh
         run: |
-          $makensis = (Get-Command makensis.exe -ErrorAction Stop).Source
+          $makensis = Join-Path ${env:ProgramFiles(x86)} 'NSIS\makensis.exe'
+          if (-not (Test-Path -LiteralPath $makensis)) { throw "NSIS executable not found: $makensis" }
           .\packaging\build_release.ps1 -Python python -MakeNSIS $makensis
 
       - name: Save build artifacts
