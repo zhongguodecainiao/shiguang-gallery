@@ -5,6 +5,16 @@ import threading
 from photo_sources import write_json
 
 CURRENT_RELEASE = {
+    'version': '1.0.4',
+    'summary': '修复应用内更新下载后无法启动安装的问题。',
+    'sections': [
+        {'title': '应用内更新', 'items': [
+            '修复 Windows PowerShell 5.1 读取更新安装脚本时的中文编码问题。',
+            '下载并校验安装包后，后台安装流程可继续运行并重新启动图库。',
+        ]},
+    ],
+}
+PREVIOUS_RELEASE_1_0_3 = {
     'version': '1.0.3',
     'summary': '版本显示与更新按钮视觉统一。',
     'sections': [
@@ -88,6 +98,7 @@ CURRENT_NOTICE_ID = CURRENT_RELEASE['version'] + '-history'
 # The first beta predates release notes; its entry describes the shipped baseline.
 RELEASE_HISTORY = [
     CURRENT_RELEASE,
+    PREVIOUS_RELEASE_1_0_3,
     PREVIOUS_RELEASE_1_0_1,
     PREVIOUS_BETA10,
     PREVIOUS_BETA9,
