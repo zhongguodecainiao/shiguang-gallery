@@ -10,9 +10,9 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 PACK = ROOT / 'packaging'
-APP = ROOT / 'release-1.0.5' / '拾光图库'
-OUT = ROOT / '发布包' / '1.0.5'
-RUNTIME = ['app.py', 'ui_preferences.py', 'folder_actions.py', 'app_paths.py', 'photo_sources.py', 'release_notes.py', 'update_channel.py', 'update_server.py', 'update-channel.example.json', 'file_actions.py', 'native_ops.py',
+APP = ROOT / 'release-1.0.6' / '拾光图库'
+OUT = ROOT / '发布包' / '1.0.6'
+RUNTIME = ['app.py', 'ui_preferences.py', 'folder_actions.py', 'app_paths.py', 'photo_sources.py', 'release_notes.py', 'update_channel.py', 'user_data_backup.py', 'update_server.py', 'update-channel.example.json', 'file_actions.py', 'native_ops.py',
            'photo_info.py', 'photo_depth.py', 'photo_clipboard.py', 'photo_filters.py',
            'full_resolution.py', 'folder_browser.py', 'requirements.txt', 'shiguang.ico']
 WEB = ['index.html', 'style.css', 'stitch-theme.css', 'beta8.css', 'beta9.css', 'cursor-left.png', 'cursor-right.png', 'material-symbols-outlined.woff2', 'photo-grid-actions.js', 'app.js', 'interactions.js', 'histogram.js', 'release-notes.js', 'viewer-navigation.js', 'brand-icon.png', 'favicon.ico', 'i18n.js', 'locales.js', 'folder-rename.js', 'viewer-layout.js']
@@ -70,7 +70,7 @@ def main():
     copy(PACK / 'README-发布版.txt', APP / '使用说明.txt')
     copy(ROOT / 'shiguang.ico', APP / 'shiguang-brand-v1.ico')
     copy(PACK / 'README-发布版.txt', OUT / '发布说明.txt')
-    source_zip = OUT / '拾光图库-1.0.5-源码.zip'
+    source_zip = OUT / '拾光图库-1.0.6-源码.zip'
     with zipfile.ZipFile(source_zip, 'w', zipfile.ZIP_DEFLATED) as z:
         for file in RUNTIME:
             z.write(ROOT / file, file)

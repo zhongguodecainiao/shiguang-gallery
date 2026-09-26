@@ -5,6 +5,22 @@ import threading
 from photo_sources import write_json
 
 CURRENT_RELEASE = {
+    'version': '1.0.6',
+    'summary': '更新记录可收起；升级前备份照片来源、收藏与相册数据。',
+    'sections': [
+        {'title': '界面与更新', 'items': [
+            '更新历史可在侧边栏收起或展开，并记住你的选择。',
+            '发现可下载的新版本时，顶部显示金色更新按钮；已是最新版本时不显示“检查更新”文字。',
+            '移除窗口标题中的版本号，版本信息集中显示在更新说明区域。',
+        ]},
+        {'title': '数据保护', 'items': [
+            '应用内更新开始安装前，在本机备份照片来源设置和各照片目录对应的图库数据库。',
+            '升级后若同一照片来源的收藏或相册记录意外缺失，会尝试从这次更新前的快照安全恢复；不会覆盖已有整理内容。',
+            '照片来源设置只在文件意外缺失时从快照恢复，不会用旧设置覆盖当前选择。',
+        ]},
+    ],
+}
+PREVIOUS_RELEASE_1_0_5 = {
     'version': '1.0.5',
     'summary': '验证应用内更新从检测到安装重启的完整流程。',
     'sections': [
@@ -108,6 +124,7 @@ CURRENT_NOTICE_ID = CURRENT_RELEASE['version'] + '-history'
 # The first beta predates release notes; its entry describes the shipped baseline.
 RELEASE_HISTORY = [
     CURRENT_RELEASE,
+    PREVIOUS_RELEASE_1_0_5,
     PREVIOUS_RELEASE_1_0_4,
     PREVIOUS_RELEASE_1_0_3,
     PREVIOUS_RELEASE_1_0_1,

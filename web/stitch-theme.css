@@ -21,9 +21,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:#ffc
 .app-topbar .brand img.brand-mark{width:29px;height:29px}
 .app-topbar #brandName{font-size:15px!important;line-height:1.1;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .app-topbar #brandTagline{font-size:8px;letter-spacing:1px;margin:1px 0 0;color:#948d82}
-#updateCheck.app-version{display:inline-flex;align-items:center;gap:6px;font:600 11px/1.2 "Segoe UI","Microsoft YaHei UI",sans-serif;color:#17130b;background:#e5a93b;border:1px solid #f0bd55;border-radius:7px;padding:7px 11px;white-space:nowrap;box-shadow:0 1px 3px #0004;transition:background .15s,transform .15s,box-shadow .15s}
-#updateCheck.app-version .material-symbols-outlined{font-size:17px;font-weight:normal}
-#updateCheck.app-version:hover{background:#ffc664;box-shadow:0 2px 8px #e5a93b44;transform:translateY(-1px)}
+#updateCheck.app-version{display:inline-flex;align-items:center;gap:6px;font:600 11px/1.2 "Segoe UI","Microsoft YaHei UI",sans-serif;color:#e5a93b;background:transparent;border:1px solid transparent;border-radius:7px;padding:7px 9px;white-space:nowrap;transition:background .15s,transform .15s,box-shadow .15s}
+#updateCheck.app-version .material-symbols-outlined{font-size:19px;font-weight:normal}
+#updateCheck.app-version .app-version-action:empty{display:none}
+#updateCheck.app-version.has-update{color:#17130b;background:#e5a93b;border-color:#f0bd55;box-shadow:0 1px 3px #0004}
+#updateCheck.app-version.has-update .app-version-action{display:inline}
+#updateCheck.app-version:hover{background:#29251f;transform:translateY(-1px)}
+#updateCheck.app-version.has-update:hover{background:#ffc664;box-shadow:0 2px 8px #e5a93b44}
 #updateCheck.app-version:active{transform:translateY(0)}
 #updateCheck.app-version:focus-visible{outline:2px solid #ffe0a0;outline-offset:2px}
 .sidebar{inset:42px auto 0 0;width:260px;padding:17px 13px 14px;background:#0e0e10;border-right:1px solid #2d2c2e;box-shadow:2px 0 16px #0003}
@@ -44,6 +48,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:#ffc
 .source-settings{border:1px solid #353437}
 .release-entry{border-top:1px solid #353437;border-radius:0;margin-top:8px}
 .release-entry small{color:#c9a862}
+.release-section-heading{display:flex;align-items:center;gap:3px;border-top:1px solid #353437;margin-top:8px}
+.release-section-heading .release-entry{flex:1;min-width:0;border-top:0;margin:0;padding:9px 8px 5px}
+.release-history-toggle{flex:none;width:28px;height:28px;color:#a69d8c;border:1px solid transparent;border-radius:5px}
+.release-history-toggle:hover{color:#ffc664;background:#29282a}
+.release-history.collapsed{display:none}
 .release-history{border-color:#353437;max-height:clamp(130px,23vh,220px);scrollbar-color:#62563e transparent}
 .release-history-card{border-color:#353437}
 .release-history-card h3{color:#ffc664}
@@ -218,6 +227,9 @@ dialog input::placeholder{color:#9c928c}
   .sidebar .nav-item>b{display:none}
   .release-entry,.source-settings,.language-button{border-radius:5px}
   .sidebar .source-settings,.sidebar .release-entry{display:flex;align-items:center;justify-content:center;font-size:0;padding:10px 0}
+  .release-section-heading{border-top:0;justify-content:center}
+  .release-section-heading .release-entry{flex:none;width:100%;padding:10px 0}
+  .release-history-toggle{display:none}
   .sidebar .source-settings::before{content:"⚙";font-size:20px}
   .sidebar .release-entry::before{content:"▤";font-size:20px}
   .sidebar .release-entry small{display:none}

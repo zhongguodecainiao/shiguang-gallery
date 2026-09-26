@@ -7,6 +7,7 @@ import secrets
 import sys
 import threading
 from folder_browser import local_drives
+from user_data_backup import restore_missing_source_settings, restore_pending_catalog
 
 SKIP_DIRECTORIES = {'windows', 'program files', 'program files (x86)', 'programdata',
                     'appdata', '$recycle.bin', 'system volume information', 'recovery',
@@ -40,6 +41,10 @@ class SourceManager:
         self.lock = threading.RLock()
         self.export_dir = Path(export_dir)
         self.app_dir = Path(app_dir or (Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent)).resolve()
+        # The updater writes a one-shot recovery snapshot before launching setup.
+        # Only a missing settings file is restored; a user's current source choice
+        # is never replaced by an older snapshot.
+        restore_missing_source_settings(self.path)
         self.state = {'version': 1, 'mode': 'folder', 'roots': [str(Path(initial_root).resolve())], 'aliases': {}}
         if legacy_data:
             self.state['aliases'][source_key('folder', [initial_root])] = str(Path(legacy_data).resolve())
@@ -49,6 +54,10 @@ class SourceManager:
                 raise ValueError('照片来源设置损坏，请恢复 source-settings.json 备份。')
             self.state = saved
         if self.state.get('export_dir'):self.export_dir=Path(self.state['export_dir'])
+        mode, roots = self.state['mode'], [Path(p).resolve() for p in self.state['roots']]
+        key = source_key(mode, roots)
+        data_path = Path(self.state.get('aliases', {}).get(key, self.control / 'catalogs' / key)).resolve()
+        restore_pending_catalog(key, data_path / 'gallery.sqlite3')
         self.gallery = self.make_gallery(self.state)
         write_json(self.path, self.state)
 
