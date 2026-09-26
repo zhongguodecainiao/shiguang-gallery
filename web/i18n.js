@@ -61,7 +61,7 @@ const I18n=(()=>{
     document.documentElement.dataset.language=locale;
     for(const [node,entries] of bindings){if(!node.isConnected){bindings.delete(node);continue}for(const [property,value] of entries)write(node,property,value)}
     const brand=languages.find(l=>l.code===locale);
-    document.title=brand.name+' · v 1.0.2';
+    document.title=brand.name+' · v 1.0.3';
     document.getElementById('brandName').textContent=brand.short||brand.name;
     document.getElementById('brandTagline').textContent=String(message('照片图库'));
     document.getElementById('languageSelect').value=locale;

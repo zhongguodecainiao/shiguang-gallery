@@ -431,7 +431,7 @@ def open_window(url, control, server=None):
     storage=Path(os.environ.get('LOCALAPPDATA',str(Path.home()/'AppData/Local')))/'ShiguangGallery'/'webview2'
     storage.mkdir(parents=True,exist_ok=True)
     native_api=NativeWindowAPI()
-    window=webview.create_window('拾光图库 · v 1.0.2',url,width=1440,height=940,
+    window=webview.create_window('拾光图库 · v 1.0.3',url,width=1440,height=940,
                                  min_size=(760,600),background_color='#0e0e10',
                                  text_select=True,zoomable=False,js_api=native_api)
     native_api._window=window
