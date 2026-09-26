@@ -66,7 +66,7 @@ def main():
                     HEIF=pillow_heif.libheif_info(), NSIS='3.12')
     (notices / 'versions.json').write_text(json.dumps(versions, ensure_ascii=False, indent=2), encoding='utf-8')
     copy(PACK / 'upstream-source' / 'GPL-3.0.txt', APP / 'LICENSE.txt')
-    copy(PACK / 'licenses' / 'Material-Symbols-LICENSE.txt', notices / 'Material-Symbols' / 'LICENSE.txt')
+    copy(PACK / 'licenses' / 'Material-Symbols' / 'LICENSE.txt', notices / 'Material-Symbols' / 'LICENSE.txt')
     copy(PACK / 'README-发布版.txt', APP / '使用说明.txt')
     copy(ROOT / 'shiguang.ico', APP / 'shiguang-brand-v1.ico')
     copy(PACK / 'README-发布版.txt', OUT / '发布说明.txt')
