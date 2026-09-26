@@ -17,8 +17,8 @@ import hashlib
 from pathlib import Path
 
 
-CURRENT_VERSION = '1.0.4'
-DISPLAY_VERSION = 'v 1.0.4'
+CURRENT_VERSION = '1.0.5'
+DISPLAY_VERSION = 'v 1.0.5'
 DEFAULT_UPDATE_URL = 'https://raw.githubusercontent.com/zhongguodecainiao/shiguang-gallery-updates/main/update-channel.json'
 _VERSION_RE = re.compile(r'^\s*[vV]?\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:[-.]?(beta|alpha|rc)(\d+)?)?\s*$')
 
