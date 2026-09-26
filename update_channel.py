@@ -5,15 +5,20 @@ import datetime as dt
 import json
 import os
 import re
+import shutil
+import subprocess
+import sys
+import tempfile
 import threading
 import urllib.error
 import urllib.parse
 import urllib.request
+import hashlib
 from pathlib import Path
 
 
-CURRENT_VERSION = '1.0.1'
-DISPLAY_VERSION = 'v 1.0.1'
+CURRENT_VERSION = '1.0.2'
+DISPLAY_VERSION = 'v 1.0.2'
 DEFAULT_UPDATE_URL = 'https://raw.githubusercontent.com/zhongguodecainiao/shiguang-gallery-updates/main/update-channel.json'
 _VERSION_RE = re.compile(r'^\s*[vV]?\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:[-.]?(beta|alpha|rc)(\d+)?)?\s*$')
 
@@ -35,6 +40,8 @@ class UpdateChannel:
         self.url = self._read_url(url)
         self.lock = threading.Lock()
         self.last_result = None
+        self.install_state = {'state': 'idle', 'message': ''}
+        self.install_thread = None
 
     def _read_url(self, override=None):
         if override:
@@ -72,7 +79,7 @@ class UpdateChannel:
         }
 
     def check(self):
-        request = urllib.request.Request(self.url, headers={'Accept': 'application/json', 'User-Agent': 'ShiguangGallery/1.0.1'})
+        request = urllib.request.Request(self.url, headers={'Accept': 'application/json', 'User-Agent': f'ShiguangGallery/{CURRENT_VERSION}'})
         try:
             with urllib.request.urlopen(request, timeout=8) as response:
                 payload = json.loads(response.read(1024 * 1024).decode('utf-8'))
@@ -108,3 +115,128 @@ class UpdateChannel:
                 'channel_url': self.url,
                 'checked_at': None,
             }
+
+    def install_status(self):
+        with self.lock:
+            return dict(self.install_state)
+
+    def start_install(self, process_id, application_path, close_application):
+        """Download a verified installer, then hand off replacement to a helper process."""
+        with self.lock:
+            if self.install_state.get('state') in ('checking', 'downloading', 'verifying', 'installing'):
+                return {'ok': True, **self.install_state}
+            self.install_state = {'state': 'checking', 'message': '正在检查更新信息…'}
+            self.install_thread = threading.Thread(
+                target=self._install_worker,
+                args=(int(process_id), str(application_path), close_application),
+                name='ShiguangGalleryUpdater', daemon=True)
+            self.install_thread.start()
+        return {'ok': True, **self.install_status()}
+
+    def _set_install_state(self, state, message):
+        with self.lock:
+            self.install_state = {'state': state, 'message': message}
+
+    def _install_worker(self, process_id, application_path, close_application):
+        installer = None
+        helper = None
+        try:
+            result = self.check()
+            if not result.get('ok'):
+                raise RuntimeError(result.get('error') or '无法获取更新信息。')
+            if not result.get('update_available'):
+                raise RuntimeError('当前已经是最新版本。')
+            latest = result['latest']
+            url = latest['download_url']
+            parsed = urllib.parse.urlparse(url)
+            if parsed.scheme != 'https' or not parsed.hostname:
+                raise ValueError('自动更新只接受 HTTPS 下载地址。')
+            if Path(urllib.parse.unquote(parsed.path)).suffix.lower() != '.exe':
+                raise ValueError('更新地址必须直接指向 Windows 安装程序（.exe）。')
+            expected_hash = latest['sha256'].strip().lower()
+            if not re.fullmatch(r'[0-9a-f]{64}', expected_hash):
+                raise ValueError('更新清单缺少有效的 SHA-256，暂不能安全地自动安装。')
+
+            self._set_install_state('downloading', '正在下载更新…')
+            request = urllib.request.Request(url, headers={'User-Agent': f'ShiguangGallery/{CURRENT_VERSION}'})
+            with urllib.request.urlopen(request, timeout=30) as response:
+                length = response.headers.get('Content-Length')
+                if length and int(length) > 1024 * 1024 * 1024:
+                    raise ValueError('安装包超过 1 GB，已取消下载。')
+                name = Path(urllib.parse.unquote(parsed.path)).name or 'ShiguangGallery-Setup.exe'
+                if not name.lower().endswith('.exe'):
+                    name += '.exe'
+                stage = Path(tempfile.mkdtemp(prefix='ShiguangGallery-update-'))
+                installer = stage / name
+                digest = hashlib.sha256()
+                received = 0
+                with installer.open('wb') as output:
+                    while True:
+                        block = response.read(1024 * 1024)
+                        if not block:
+                            break
+                        received += len(block)
+                        if received > 1024 * 1024 * 1024:
+                            raise ValueError('安装包超过 1 GB，已取消下载。')
+                        digest.update(block)
+                        output.write(block)
+                        total = int(length) if length and length.isdigit() else 0
+                        message = (f'正在下载更新… {received // (1024 * 1024)} MB' +
+                                   (f' / {max(1, total // (1024 * 1024))} MB' if total else ''))
+                        self._set_install_state('downloading', message)
+
+            self._set_install_state('verifying', '正在校验安装包…')
+            if digest.hexdigest().lower() != expected_hash:
+                raise ValueError('安装包 SHA-256 校验失败，未运行该文件。')
+            if not getattr(sys, 'frozen', False):
+                raise RuntimeError('自动安装仅支持已安装的 Windows 版本。')
+
+            script = r'''param([int]$WaitPid,[string]$InstallerPath,[string]$ApplicationPath)
+$ErrorActionPreference = 'Stop'
+try {
+  while (Get-Process -Id $WaitPid -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 300 }
+  $run = Start-Process -FilePath $InstallerPath -ArgumentList '/S' -Wait -PassThru
+  if ($run.ExitCode -ne 0) { throw "安装程序退出代码：$($run.ExitCode)" }
+  if (-not (Test-Path -LiteralPath $ApplicationPath)) { throw '安装完成后未找到应用程序。' }
+  Start-Process -FilePath $ApplicationPath
+} catch {
+  try {
+    Add-Type -AssemblyName PresentationFramework
+    [System.Windows.MessageBox]::Show("自动更新未能完成：$($_.Exception.Message)`n旧版本可能仍可从桌面快捷方式启动。", '拾光图库更新', 'OK', 'Warning') | Out-Null
+  } catch {}
+  if (Test-Path -LiteralPath $ApplicationPath) { Start-Process -FilePath $ApplicationPath -ErrorAction SilentlyContinue }
+} finally {
+  Start-Sleep -Seconds 2
+  $stage = Split-Path -Parent $InstallerPath
+  Remove-Item -LiteralPath $InstallerPath -Force -ErrorAction SilentlyContinue
+  Remove-Item -LiteralPath $PSCommandPath -Force -ErrorAction SilentlyContinue
+  Remove-Item -LiteralPath $stage -Force -ErrorAction SilentlyContinue
+}'''
+            helper = installer.parent / 'install-update.ps1'
+            helper.write_text(script, encoding='utf-8')
+            powershell = shutil.which('powershell.exe') or str(Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32' / 'WindowsPowerShell' / 'v1.0' / 'powershell.exe')
+            if not Path(powershell).is_file():
+                raise RuntimeError('找不到 Windows PowerShell，无法安全替换程序。')
+            creation_flags = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
+            subprocess.Popen([
+                powershell, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+                '-WindowStyle', 'Hidden', '-File', str(helper),
+                '-WaitPid', str(process_id), '-InstallerPath', str(installer),
+                '-ApplicationPath', application_path,
+            ], close_fds=True, creationflags=creation_flags)
+            installer = None  # The helper owns the staged files now.
+            helper = None
+            self._set_install_state('installing', f'正在退出旧版本并安装 {latest["display_version"]}…')
+            threading.Timer(0.8, close_application).start()
+        except Exception as exc:
+            if installer:
+                try:
+                    shutil.rmtree(installer.parent, ignore_errors=True)
+                except OSError:
+                    pass
+            if helper:
+                try:
+                    helper.unlink(missing_ok=True)
+                except OSError:
+                    pass
+            self._set_install_state('failed', str(exc))

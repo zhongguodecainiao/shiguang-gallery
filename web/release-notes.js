@@ -29,7 +29,7 @@
     if (dialog.open) return;
     current = release;
     opened = true;
-    I18n.text($('#releaseVersion'), release.version === '1.0.1' ? 'v 1.0.1' : release.version);
+    I18n.text($('#releaseVersion'), release.version === '1.0.2' ? 'v 1.0.2' : release.version);
     I18n.text($('#releaseSummary'), T(release.summary));
     $('#releaseSections').replaceChildren(...sections(release.sections));
     paintHistory(release);
@@ -58,7 +58,7 @@
     dismiss();
   });
   $('#showReleaseNotes').onclick = guard(async () => show(await api('/api/updates')));
-  const updateDialog = $('#updateDialog'), updateStatus = $('#updateStatus'), updateDetails = $('#updateDetails'), updateDownload = $('#updateDownload');
+  const updateDialog = $('#updateDialog'), updateStatus = $('#updateStatus'), updateDetails = $('#updateDetails'), updateDownload = $('#updateDownload'), updateDone = $('#updateDone'), updateClose = $('#updateClose');
   function showUpdate(result) {
     updateDownload.disabled = true;
     updateDownload.onclick = null;
@@ -75,8 +75,30 @@
       if (latest.published_at) updateDetails.append(el('p', '', `发布日期：${latest.published_at}`));
       if (latest.download_url) {
         updateDownload.disabled = false;
-        updateDownload.onclick = () => window.open(latest.download_url, '_blank', 'noopener');
+        updateDownload.onclick = installUpdate;
       }
+    }
+  }
+  const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+  async function installUpdate() {
+    if (!window.confirm('拾光图库将下载并校验更新包，然后自动退出、安装新版并重新启动。现在继续吗？')) return;
+    updateDownload.disabled = true;
+    updateDone.disabled = updateClose.disabled = true;
+    updateStatus.textContent = '正在准备应用内更新…';
+    try {
+      const started = await api('/api/update-install', {});
+      if (started.state === 'failed') throw new Error(started.message || '无法开始更新。');
+      for (;;) {
+        const state = await api('/api/update-status');
+        updateStatus.textContent = state.message || '正在处理更新…';
+        if (state.state === 'failed') throw new Error(state.message || '更新失败。');
+        if (state.state === 'installing') return;
+        await pause(700);
+      }
+    } catch (error) {
+      updateStatus.textContent = error.message || '自动更新失败。';
+      updateDownload.disabled = false;
+      updateDone.disabled = updateClose.disabled = false;
     }
   }
   async function checkUpdate() {

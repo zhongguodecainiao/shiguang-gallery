@@ -5,6 +5,17 @@ import threading
 from photo_sources import write_json
 
 CURRENT_RELEASE = {
+    'version': '1.0.2',
+    'summary': '支持在应用内下载并安装新版本。',
+    'sections': [
+        {'title': '应用内更新', 'items': [
+            '发现新版本后，可在应用内下载、校验并安装，无需手动打开下载页运行安装包。',
+            '安装前会自动退出旧版本，安装完成后重新启动；照片与相册数据保持在原位置。',
+            '安装包校验失败或更新过程出错时，不会运行未通过校验的安装文件。',
+        ]},
+    ],
+}
+PREVIOUS_RELEASE_1_0_1 = {
     'version': '1.0.1',
     'summary': '支持联网检查更新，也可以连接你自己的更新服务器。',
     'sections': [
@@ -77,6 +88,7 @@ CURRENT_NOTICE_ID = CURRENT_RELEASE['version'] + '-history'
 # The first beta predates release notes; its entry describes the shipped baseline.
 RELEASE_HISTORY = [
     CURRENT_RELEASE,
+    PREVIOUS_RELEASE_1_0_1,
     PREVIOUS_BETA10,
     PREVIOUS_BETA9,
     PREVIOUS_BETA8,

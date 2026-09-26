@@ -346,6 +346,7 @@ class Handler(BaseHTTPRequestHandler):
             if url.path=='/api/preferences':return self.reply(200,self.server.preferences.read())
             if url.path=='/api/updates':return self.reply(200,self.server.updates.describe())
             if url.path=='/api/update-check':return self.reply(200,self.server.update_channel.check())
+            if url.path=='/api/update-status':return self.reply(200,self.server.update_channel.install_status())
             if url.path=='/api/window/activate':
                 window=self.server.native_window
                 if window is None:raise RuntimeError('窗口尚未准备完成')
@@ -383,6 +384,14 @@ class Handler(BaseHTTPRequestHandler):
             body=json.loads(self.rfile.read(size))
             if self.path=='/api/preferences':return self.reply(200,self.server.preferences.save(body.get('language')))
             if self.path=='/api/updates/seen':return self.reply(200,self.server.updates.acknowledge(body.get('version')))
+            if self.path=='/api/update-install':
+                window=self.server.native_window
+                if window is None:raise RuntimeError('自动更新需要在桌面应用窗口中运行。')
+                def close_application():
+                    try:window.destroy()
+                    except Exception:os._exit(0)
+                return self.reply(202,self.server.update_channel.start_install(
+                    os.getpid(),sys.executable,close_application))
             manager=getattr(self.server,'sources',None)
             with manager.lock if manager else contextlib.nullcontext():
                 if manager and self.headers.get('X-Gallery-Catalog')!=self.server.gallery.catalog_key:
@@ -422,7 +431,7 @@ def open_window(url, control, server=None):
     storage=Path(os.environ.get('LOCALAPPDATA',str(Path.home()/'AppData/Local')))/'ShiguangGallery'/'webview2'
     storage.mkdir(parents=True,exist_ok=True)
     native_api=NativeWindowAPI()
-    window=webview.create_window('拾光图库 · v 1.0.1',url,width=1440,height=940,
+    window=webview.create_window('拾光图库 · v 1.0.2',url,width=1440,height=940,
                                  min_size=(760,600),background_color='#0e0e10',
                                  text_select=True,zoomable=False,js_api=native_api)
     native_api._window=window
