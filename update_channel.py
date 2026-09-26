@@ -17,8 +17,8 @@ import hashlib
 from pathlib import Path
 
 
-CURRENT_VERSION = '1.0.5'
-DISPLAY_VERSION = 'v 1.0.5'
+CURRENT_VERSION = '1.0.6'
+DISPLAY_VERSION = 'v 1.0.6'
 DEFAULT_UPDATE_URL = 'https://raw.githubusercontent.com/zhongguodecainiao/shiguang-gallery-updates/main/update-channel.json'
 _VERSION_RE = re.compile(r'^\s*[vV]?\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:[-.]?(beta|alpha|rc)(\d+)?)?\s*$')
 
@@ -120,7 +120,8 @@ class UpdateChannel:
         with self.lock:
             return dict(self.install_state)
 
-    def start_install(self, process_id, application_path, close_application):
+    def start_install(self, process_id, application_path, close_application,
+                      prepare_update=None, cancel_update=None):
         """Download a verified installer, then hand off replacement to a helper process."""
         with self.lock:
             if self.install_state.get('state') in ('checking', 'downloading', 'verifying', 'installing'):
@@ -128,7 +129,8 @@ class UpdateChannel:
             self.install_state = {'state': 'checking', 'message': '正在检查更新信息…'}
             self.install_thread = threading.Thread(
                 target=self._install_worker,
-                args=(int(process_id), str(application_path), close_application),
+                args=(int(process_id), str(application_path), close_application,
+                      prepare_update, cancel_update),
                 name='ShiguangGalleryUpdater', daemon=True)
             self.install_thread.start()
         return {'ok': True, **self.install_status()}
@@ -137,9 +139,12 @@ class UpdateChannel:
         with self.lock:
             self.install_state = {'state': state, 'message': message}
 
-    def _install_worker(self, process_id, application_path, close_application):
+    def _install_worker(self, process_id, application_path, close_application,
+                        prepare_update=None, cancel_update=None):
         installer = None
         helper = None
+        pending_backup = ''
+        handed_off = False
         try:
             result = self.check()
             if not result.get('ok'):
@@ -190,16 +195,24 @@ class UpdateChannel:
                 raise ValueError('安装包 SHA-256 校验失败，未运行该文件。')
             if not getattr(sys, 'frozen', False):
                 raise RuntimeError('自动安装仅支持已安装的 Windows 版本。')
+            if prepare_update:
+                self._set_install_state('verifying', '正在备份照片来源、收藏和相册…')
+                pending_backup = str(prepare_update() or '')
 
-            script = r'''param([int]$WaitPid,[string]$InstallerPath,[string]$ApplicationPath)
+            script = r'''param([int]$WaitPid,[string]$InstallerPath,[string]$ApplicationPath,[string]$PendingBackupPath)
 $ErrorActionPreference = 'Stop'
+$installSucceeded = $false
 try {
   while (Get-Process -Id $WaitPid -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 300 }
   $run = Start-Process -FilePath $InstallerPath -ArgumentList '/S' -Wait -PassThru
   if ($run.ExitCode -ne 0) { throw "安装程序退出代码：$($run.ExitCode)" }
+  $installSucceeded = $true
   if (-not (Test-Path -LiteralPath $ApplicationPath)) { throw '安装完成后未找到应用程序。' }
   Start-Process -FilePath $ApplicationPath
 } catch {
+  if (-not $installSucceeded -and $PendingBackupPath -and (Test-Path -LiteralPath $PendingBackupPath)) {
+    Remove-Item -LiteralPath $PendingBackupPath -Force -ErrorAction SilentlyContinue
+  }
   try {
     Add-Type -AssemblyName PresentationFramework
     [System.Windows.MessageBox]::Show("自动更新未能完成：$($_.Exception.Message)`n旧版本可能仍可从桌面快捷方式启动。", '拾光图库更新', 'OK', 'Warning') | Out-Null
@@ -223,13 +236,19 @@ try {
                 powershell, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
                 '-WindowStyle', 'Hidden', '-File', str(helper),
                 '-WaitPid', str(process_id), '-InstallerPath', str(installer),
-                '-ApplicationPath', application_path,
+                '-ApplicationPath', application_path, '-PendingBackupPath', pending_backup,
             ], close_fds=True, creationflags=creation_flags)
+            handed_off = True
             installer = None  # The helper owns the staged files now.
             helper = None
             self._set_install_state('installing', f'正在退出旧版本并安装 {latest["display_version"]}…')
             threading.Timer(0.8, close_application).start()
         except Exception as exc:
+            if not handed_off and cancel_update:
+                try:
+                    cancel_update()
+                except Exception:
+                    pass
             if installer:
                 try:
                     shutil.rmtree(installer.parent, ignore_errors=True)

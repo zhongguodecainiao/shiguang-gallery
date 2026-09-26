@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: shiguang-gallery-windows-${{ github.sha }}
-          path: 发布包/1.0.5/*
+          path: 发布包/1.0.6/*
           if-no-files-found: error
           retention-days: 14
 
@@ -51,10 +51,10 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          name: v 1.0.5
+          name: v 1.0.6
           body: |
-            拾光图库 v1.0.5：用于验证应用内更新从检测、下载、校验到安装重启的完整流程。
+            拾光图库 v1.0.6：更新历史可收起；升级前备份照片来源、收藏与相册数据。
 
             SHA-256 校验值随安装包一同发布。
-          files: 发布包/1.0.5/*
+          files: 发布包/1.0.6/*
           fail_on_unmatched_files: true

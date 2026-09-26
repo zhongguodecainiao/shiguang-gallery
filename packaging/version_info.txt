@@ -3,8 +3,8 @@ VSVersionInfo(
  kids=[StringFileInfo([StringTable('080404B0',[
   StringStruct('CompanyName','拾光图库'),
   StringStruct('FileDescription','拾光图库 · 本地照片与虚拟相册'),
-  StringStruct('FileVersion','1.0.5'),
+  StringStruct('FileVersion','1.0.6'),
   StringStruct('InternalName','ShiguangGallery'),
   StringStruct('OriginalFilename','拾光图库.exe'),
   StringStruct('ProductName','拾光图库'),
-  StringStruct('ProductVersion','1.0.5')])]),VarFileInfo([VarStruct('Translation',[2052,1200])])])
+  StringStruct('ProductVersion','1.0.6')])]),VarFileInfo([VarStruct('Translation',[2052,1200])])])

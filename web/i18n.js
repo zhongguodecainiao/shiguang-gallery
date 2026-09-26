@@ -14,7 +14,7 @@ const I18n=(()=>{
     {code:'ru',native:'Русский',name:'Светопись'}
   ];
   let locale='zh-CN';
-  let displayVersion='v 1.0.5';
+  let displayVersion='v 1.0.6';
   try{const saved=localStorage.getItem('shiguang.language');if(languages.some(l=>l.code===saved))locale=saved}catch{}
   const bindings=new Map(),missing=new Set();
   class Value{constructor(render){this.render=render}toString(){return String(this.render())}[Symbol.toPrimitive](){return this.toString()}}
@@ -62,11 +62,11 @@ const I18n=(()=>{
     document.documentElement.dataset.language=locale;
     for(const [node,entries] of bindings){if(!node.isConnected){bindings.delete(node);continue}for(const [property,value] of entries)write(node,property,value)}
     const brand=languages.find(l=>l.code===locale);
-    document.title=brand.name+' · '+displayVersion;
-    const versionLabel=document.querySelector('#updateCheck .app-version-label');
-    if(versionLabel)versionLabel.textContent=displayVersion;
+    document.title=brand.name;
     const updateButton=document.getElementById('updateCheck');
-    if(updateButton)bind(updateButton,'aria-label',concat(displayVersion,' · ',message('检查更新')));
+    if(updateButton)bind(updateButton,'aria-label',message('检查更新'));
+    const historyToggle=document.getElementById('toggleReleaseHistory');
+    if(historyToggle)bind(historyToggle,'aria-label',message(historyToggle.getAttribute('aria-expanded')==='true'?'收起更新历史':'展开更新历史'));
     const releaseLabel=document.querySelector('#showReleaseNotes small');
     if(releaseLabel)releaseLabel.textContent=displayVersion;
     document.getElementById('brandName').textContent=brand.short||brand.name;

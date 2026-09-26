@@ -16,6 +16,7 @@ from app_paths import launch_paths
 from photo_sources import SourceManager, source_key, SKIP_DIRECTORIES
 from release_notes import ReleaseNotes
 from update_channel import CURRENT_VERSION, DISPLAY_VERSION, UpdateChannel
+from user_data_backup import cancel_pending_snapshot, create_pending_snapshot
 from ui_preferences import UIPreferences
 from folder_actions import rename_folder
 from photo_filters import origin_category, capture_facets, append_filter_clauses
@@ -388,11 +389,23 @@ class Handler(BaseHTTPRequestHandler):
             if self.path=='/api/update-install':
                 window=self.server.native_window
                 if window is None:raise RuntimeError('自动更新需要在桌面应用窗口中运行。')
+                manager=self.server.sources
+                if manager.gallery.files.snapshot()['running']:
+                    raise RuntimeError('照片复制、分享或删除尚未完成，请结束操作后再更新。')
+                def prepare_update():
+                    with manager.lock:
+                        if manager.gallery.files.snapshot()['running']:
+                            raise RuntimeError('照片操作尚未完成，请稍后再更新。')
+                        return create_pending_snapshot(
+                            manager.control, manager.gallery.db,
+                            manager.gallery.catalog_key, manager.path)
                 def close_application():
                     try:window.destroy()
                     except Exception:os._exit(0)
                 return self.reply(202,self.server.update_channel.start_install(
-                    os.getpid(),sys.executable,close_application))
+                    os.getpid(),sys.executable,close_application,
+                    prepare_update=prepare_update,
+                    cancel_update=cancel_pending_snapshot))
             manager=getattr(self.server,'sources',None)
             with manager.lock if manager else contextlib.nullcontext():
                 if manager and self.headers.get('X-Gallery-Catalog')!=self.server.gallery.catalog_key:
@@ -432,7 +445,7 @@ def open_window(url, control, server=None):
     storage=Path(os.environ.get('LOCALAPPDATA',str(Path.home()/'AppData/Local')))/'ShiguangGallery'/'webview2'
     storage.mkdir(parents=True,exist_ok=True)
     native_api=NativeWindowAPI()
-    window=webview.create_window(f'拾光图库 · {DISPLAY_VERSION}',url,width=1440,height=940,
+    window=webview.create_window('拾光图库',url,width=1440,height=940,
                                  min_size=(760,600),background_color='#0e0e10',
                                  text_select=True,zoomable=False,js_api=native_api)
     native_api._window=window
@@ -470,6 +483,7 @@ def main():
         except Exception:pass
     manager=SourceManager(Gallery,control,root,export,legacy_data=data if args.data_dir else None)
     gallery=manager.gallery;server=bind_local_server(gallery,saved);server.sources=manager
+    server.update_channel=UpdateChannel(control)
     server.updates=ReleaseNotes(control)
     server.preferences=UIPreferences(control)
     origin=f'http://127.0.0.1:{server.server_port}';url=origin+'/?token='+gallery.token

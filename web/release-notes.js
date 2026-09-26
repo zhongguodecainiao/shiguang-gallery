@@ -2,9 +2,23 @@
 
 (() => {
   const dialog = $('#releaseDialog');
+  const historyPanel = $('#releaseHistory'), historyToggle = $('#toggleReleaseHistory');
   let current = null,
     closing = false,
     opened = false;
+  function setHistoryCollapsed(collapsed) {
+    historyPanel.classList.toggle('collapsed', collapsed);
+    historyToggle.setAttribute('aria-expanded', String(!collapsed));
+    historyToggle.textContent = collapsed ? 'expand_more' : 'expand_less';
+    const label = collapsed ? '展开更新历史' : '收起更新历史';
+    I18n.attr(historyToggle, 'aria-label', T(label));
+    I18n.attr(historyToggle, 'title', T(label));
+    try { localStorage.setItem('shiguang.releaseHistoryCollapsed', collapsed ? '1' : '0'); } catch {}
+  }
+  let historyCollapsed = true;
+  try { historyCollapsed = localStorage.getItem('shiguang.releaseHistoryCollapsed') !== '0'; } catch {}
+  setHistoryCollapsed(historyCollapsed);
+  historyToggle.onclick = () => setHistoryCollapsed(!historyPanel.classList.contains('collapsed'));
   function sections(groups, compact = false) {
     return groups.map(group => {
       const section = el('section', compact ? 'release-section compact' : 'release-section'),
@@ -101,14 +115,31 @@
       updateDone.disabled = updateClose.disabled = false;
     }
   }
-  async function checkUpdate() {
-    updateStatus.textContent = '正在连接更新服务器…';
-    updateDetails.replaceChildren();
-    updateDownload.disabled = true;
-    updateDialog.showModal();
-    showUpdate(await api('/api/update-check'));
+  function paintUpdateButton(result) {
+    const button = $('#updateCheck'), label = $('#updateCheckLabel');
+    const available = result.ok && result.update_available && result.latest?.download_url;
+    button.classList.toggle('has-update', Boolean(available));
+    const labelText = available ? T('发现新版本 {0}，点击查看更新', result.latest.display_version) : T('检查更新');
+    I18n.text(label, available ? T('更新到 {0}', result.latest.display_version) : '');
+    I18n.attr(button, 'title', labelText);
+    I18n.attr(button, 'aria-label', labelText);
   }
-  $('#updateCheck').onclick = guard(checkUpdate);
+  async function checkUpdate(openDialog = true) {
+    if (openDialog) {
+      updateStatus.textContent = '正在连接更新服务器…';
+      updateDetails.replaceChildren();
+      updateDownload.disabled = true;
+      updateDialog.showModal();
+    }
+    const result = await api('/api/update-check');
+    paintUpdateButton(result);
+    if (openDialog) showUpdate(result);
+    else if (result.ok && result.update_available && result.latest?.download_url) {
+      toast(T('发现新版本：{0}，点击顶部按钮查看更新。', result.latest.display_version));
+    }
+    return result;
+  }
+  $('#updateCheck').onclick = guard(() => checkUpdate(true));
   $('#updateClose').onclick = $('#updateDone').onclick = () => updateDialog.close();
   async function startup() {
     try {
@@ -129,5 +160,8 @@
       console.warn(T("暂时无法读取更新说明"), e);
     }
   }
-  I18n.ready.then(startup);
+  I18n.ready.then(() => {
+    startup();
+    checkUpdate(false).catch(error => console.warn(T('暂时无法连接更新服务器'), error));
+  });
 })();
