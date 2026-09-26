@@ -17,8 +17,8 @@ import hashlib
 from pathlib import Path
 
 
-CURRENT_VERSION = '1.0.3'
-DISPLAY_VERSION = 'v 1.0.3'
+CURRENT_VERSION = '1.0.4'
+DISPLAY_VERSION = 'v 1.0.4'
 DEFAULT_UPDATE_URL = 'https://raw.githubusercontent.com/zhongguodecainiao/shiguang-gallery-updates/main/update-channel.json'
 _VERSION_RE = re.compile(r'^\s*[vV]?\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:[-.]?(beta|alpha|rc)(\d+)?)?\s*$')
 
@@ -213,7 +213,8 @@ try {
   Remove-Item -LiteralPath $stage -Force -ErrorAction SilentlyContinue
 }'''
             helper = installer.parent / 'install-update.ps1'
-            helper.write_text(script, encoding='utf-8')
+            # Windows PowerShell 5.1 needs a BOM to read UTF-8 scripts containing Chinese.
+            helper.write_text(script, encoding='utf-8-sig')
             powershell = shutil.which('powershell.exe') or str(Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32' / 'WindowsPowerShell' / 'v1.0' / 'powershell.exe')
             if not Path(powershell).is_file():
                 raise RuntimeError('找不到 Windows PowerShell，无法安全替换程序。')

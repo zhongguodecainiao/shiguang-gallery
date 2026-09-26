@@ -5,20 +5,20 @@
 !include "FileFunc.nsh"
 !include "x64.nsh"
 !include "WinVer.nsh"
-Name "拾光图库 v 1.0.3"
-OutFile "..\发布包\1.0.3\拾光图库-1.0.3-Windows-x64-Setup.exe"
+Name "拾光图库 v 1.0.4"
+OutFile "..\发布包\1.0.4\拾光图库-1.0.4-Windows-x64-Setup.exe"
 InstallDir "$LOCALAPPDATA\Programs\ShiguangGallery"
 InstallDirRegKey HKCU "Software\ShiguangGallery" "InstallDir"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
 SetCompressorDictSize 32
 BrandingText "拾光图库 · 照片留在自己的电脑"
-VIProductVersion "1.0.3.0"
-VIFileVersion "1.0.3.0"
-VIAddVersionKey /LANG=2052 "ProductVersion" "1.0.3"
+VIProductVersion "1.0.4.0"
+VIFileVersion "1.0.4.0"
+VIAddVersionKey /LANG=2052 "ProductVersion" "1.0.4"
 VIAddVersionKey /LANG=2052 "ProductName" "拾光图库"
 VIAddVersionKey /LANG=2052 "FileDescription" "拾光图库 Windows 64 位安装程序"
-VIAddVersionKey /LANG=2052 "FileVersion" "1.0.3"
+VIAddVersionKey /LANG=2052 "FileVersion" "1.0.4"
 VIAddVersionKey /LANG=2052 "LegalCopyright" "GPL-3.0-or-later; bundled components retain their licenses"
 !define MUI_ICON "..\shiguang.ico"
 !define MUI_UNICON "..\shiguang.ico"
@@ -172,7 +172,7 @@ Section "拾光图库"
   Call ValidatePhotoRoot
   Call EnsureWebView2
   SetOutPath "$INSTDIR"
-  File /r "..\release-1.0.3\拾光图库\*.*"
+  File /r "..\release-1.0.4\拾光图库\*.*"
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   WriteRegStr HKCU "Software\ShiguangGallery" "PhotoRoot" "$PhotoRoot"
   WriteRegStr HKCU "Software\ShiguangGallery" "InstallDir" "$INSTDIR"
@@ -184,7 +184,7 @@ Section "拾光图库"
     CreateShortcut "$DESKTOP\拾光图库.lnk" "$INSTDIR\拾光图库.exe" "" "$INSTDIR\shiguang-brand-v1.ico" 0
   ${EndIf}
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\ShiguangGallery" "DisplayName" "拾光图库"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\ShiguangGallery" "DisplayVersion" "1.0.3"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\ShiguangGallery" "DisplayVersion" "1.0.4"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\ShiguangGallery" "UninstallString" '$\"$INSTDIR\Uninstall.exe$\"'
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\ShiguangGallery" "InstallLocation" "$INSTDIR"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\ShiguangGallery" "DisplayIcon" "$INSTDIR\拾光图库.exe"
