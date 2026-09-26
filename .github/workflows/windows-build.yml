@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: shiguang-gallery-windows-${{ github.sha }}
-          path: 发布包/1.0.4/*
+          path: 发布包/1.0.5/*
           if-no-files-found: error
           retention-days: 14
 
@@ -51,10 +51,10 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          name: v 1.0.4
+          name: v 1.0.5
           body: |
-            拾光图库 v1.0.4：修复 Windows PowerShell 5.1 无法读取更新安装脚本的问题。
+            拾光图库 v1.0.5：用于验证应用内更新从检测、下载、校验到安装重启的完整流程。
 
             SHA-256 校验值随安装包一同发布。
-          files: 发布包/1.0.4/*
+          files: 发布包/1.0.5/*
           fail_on_unmatched_files: true
