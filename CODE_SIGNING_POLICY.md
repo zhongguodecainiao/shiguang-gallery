@@ -2,6 +2,8 @@
 
 This policy covers official Windows release installers for Shiguang Gallery.
 
+Free code signing provided by SignPath.io, certificate by SignPath Foundation. The project is applying for this service. Releases remain unsigned unless and until SignPath Foundation accepts the project and a specific artifact completes signing.
+
 ## Release artifacts
 
 Official installers are built from this repository's `main` branch and published through the [release repository](https://github.com/zhongguodecainiao/shiguang-gallery-updates/releases). Only artifacts built from reviewed source in this repository may be submitted for signing.

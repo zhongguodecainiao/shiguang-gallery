@@ -29,4 +29,4 @@ GPL-3.0-or-later. See [LICENSE.txt](LICENSE.txt).
 
 ## Code signing policy
 
-See [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
+Free code signing provided by SignPath.io, certificate by SignPath Foundation. This project is applying for the program; releases are unsigned until the application is accepted and an artifact is signed. See the [code signing policy](CODE_SIGNING_POLICY.md).
