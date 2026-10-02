@@ -14,7 +14,7 @@ const I18n=(()=>{
     {code:'ru',native:'Русский',name:'Светопись'}
   ];
   let locale='zh-CN';
-  let displayVersion='v 1.0.6';
+  let displayVersion='v 1.0.7';
   try{const saved=localStorage.getItem('shiguang.language');if(languages.some(l=>l.code===saved))locale=saved}catch{}
   const bindings=new Map(),missing=new Set();
   class Value{constructor(render){this.render=render}toString(){return String(this.render())}[Symbol.toPrimitive](){return this.toString()}}

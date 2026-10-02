@@ -6,7 +6,7 @@ from pathlib import Path
 import secrets
 import sys
 import threading
-from folder_browser import local_drives
+from folder_browser import local_drives, storage_drives
 from user_data_backup import restore_missing_source_settings, restore_pending_catalog
 
 SKIP_DIRECTORIES = {'windows', 'program files', 'program files (x86)', 'programdata',
@@ -72,10 +72,9 @@ class SourceManager:
         return g
 
     def describe(self):
-        drives = local_drives()
         return {'mode': self.state['mode'], 'roots': self.state['roots'],
                 'catalog': self.gallery.catalog_key,
-                'drives': [{'path': p, 'default': p[:1].upper() != 'G'} for p in drives]}
+                'drives': storage_drives()}
 
     def validate(self, body):
         mode = body.get('mode')
@@ -94,7 +93,7 @@ class SourceManager:
                 raise ValueError('请选择本机磁盘上的完整路径。')
             path = raw.resolve()
             if str(Path(path.anchor)).casefold() not in drives:
-                raise ValueError('请选择已连接的本机固定磁盘。')
+                raise ValueError('请选择已连接的本机磁盘、SD 卡或外接存储。')
             if mode == 'computer' and str(path).casefold() not in drives:
                 raise ValueError('全盘模式请选择磁盘根目录。')
             if not path.is_dir():
