@@ -4,7 +4,7 @@
   const viewer = $('#viewer'), dock = $('#viewerDock'), info = $('#photoInfo'), toggle = $('#infoToggle');
   new ResizeObserver(() => viewer.style.setProperty('--viewer-dock-height', dock.offsetHeight + 'px')).observe(dock);
   new ResizeObserver(() => viewer.style.setProperty('--fullscreen-top-height', Math.ceil($('.viewer-top').getBoundingClientRect().height) + 'px')).observe($('.viewer-top'));
-  const statusNodes = ['seekDate', 'seekHint', 'seekPosition', 'filmWindow', 'seekPreviewName', 'seekPreviewMeta', 'viewResolution']
+  const statusNodes = ['seekDate', 'seekHint', 'seekPosition', 'filmWindow', 'viewResolution']
     .map(id => document.getElementById(id)).concat($('.zoom-hint'));
   const statusAnchors = statusNodes.map(node => {
     const anchor = document.createComment('fullscreen status origin');

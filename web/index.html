@@ -12,7 +12,7 @@
   <div id="albumNav" class="album-nav"></div>
   <button id="languageButton" class="language-button" title="语言 / Language"><span class="material-symbols-outlined" aria-hidden="true">language</span><span class="language-button-label">语言 / Language</span></button>
   <button id="sourceSettings" class="source-settings" aria-label="设置照片来源"><span class="material-symbols-outlined" aria-hidden="true">settings</span>照片来源</button>
-  <div class="release-section-heading"><button id="showReleaseNotes" class="release-entry" aria-label="查看本次版本更新说明">更新说明 <small>v 1.0.6</small></button><button id="toggleReleaseHistory" class="release-history-toggle icon-button material-symbols-outlined" type="button" aria-label="展开更新历史" aria-expanded="false" title="展开更新历史">expand_more</button></div>
+  <div class="release-section-heading"><button id="showReleaseNotes" class="release-entry" aria-label="查看本次版本更新说明">更新说明 <small>v 1.0.7</small></button><button id="toggleReleaseHistory" class="release-history-toggle icon-button material-symbols-outlined" type="button" aria-label="展开更新历史" aria-expanded="false" title="展开更新历史">expand_more</button></div>
   <div id="releaseHistory" class="release-history collapsed" role="region" aria-label="所有版本更新记录" tabindex="0"></div>
   <div class="source"><span class="source-dot"></span><div>本机照片<small id="rootPath">正在读取照片目录…</small></div><button id="refresh" class="icon-button material-symbols-outlined" title="重新扫描文件夹" aria-label="刷新图库">refresh</button></div>
 </aside>
@@ -51,9 +51,9 @@
 </div><div class="viewer-image-row"><button id="previous" class="viewer-arrow" aria-label="上一张">‹</button><div id="imageStage"><img id="fullImage" alt=""><div id="previewError" class="hidden">这张照片暂时无法预览。<small>原文件仍在，你可以在文件夹中查看。</small></div></div><button id="next" class="viewer-arrow" aria-label="下一张">›</button></div><div id="viewerDock" class="viewer-dock"><div class="image-quality-bar" aria-label="图片清晰度"><div class="quality-buttons"><button id="qualityFast" class="active" aria-pressed="true">快速预览</button><button id="qualityFull" aria-pressed="false">原图细节</button><button id="zoomActual" title="加载完整分辨率，按 1 个图像像素对应 1 个屏幕像素显示">100%</button></div><span id="viewResolution" role="status">正在读取预览…</span></div><section class="photo-seek-panel" aria-label="照片浏览进度">
 <div class="seek-caption"><span id="seekDate"></span><span class="seek-hint" id="seekHint">悬停放大 · 点击或拖动松开切换 · 滚轮浏览缩略图</span><span id="seekPosition"></span></div>
 <div id="photoSeekWrap">
-<div id="seekFan" class="seek-fan hidden" aria-hidden="true"></div>
+<div id="seekHoverPreview" class="seek-hover-preview hidden" aria-hidden="true"></div>
 <div class="film-row"><button id="filmEarlier" class="film-page" aria-label="更早位置的缩略图" title="上一组缩略图">‹</button><div id="filmRail" aria-label="附近照片缩略图"></div><button id="filmLater" class="film-page" aria-label="更后位置的缩略图" title="下一组缩略图">›</button></div>
-<div class="film-caption"><span id="filmWindow"></span><button id="filmReturn" title="让当前大图对应的缩略图回到正中央">回到当前照片</button><span id="seekPreviewName"></span><span id="seekPreviewMeta"></span></div>
+<div class="film-caption"><span id="filmWindow"></span><button id="filmReturn" title="让当前大图对应的缩略图回到正中央">回到当前照片</button></div>
 <div class="whole-seek"><span id="seekScope">全图库定位</span><div class="seek-axis"><input id="photoSeek" type="range" min="0" max="0" value="0" step="1" aria-label="全图库照片浏览进度" aria-describedby="seekHint"><div id="seekTimeline" aria-label="照片日期坐标"></div></div></div>
 </div></section></div></div><button id="infoToggle" class="info-toggle" aria-controls="photoInfo" aria-expanded="true" title="收起照片信息" aria-label="收起照片信息">›</button><aside id="photoInfo" class="photo-info"><div class="info-title">照片信息</div>
 <section class="histogram-panel" aria-label="颜色直方图"><div class="histogram-heading"><span>颜色直方图</span><label><input id="histogramLog" type="checkbox">对数</label></div><canvas id="histogramCanvas" width="560" height="240" role="img" aria-label="当前照片预览的 RGB 和亮度直方图"></canvas><div class="histogram-axis"><span>暗部 · 0</span><span>中间调</span><span>255 · 高光</span></div><div class="histogram-legend"><span class="red">● R</span><span class="green">● G</span><span class="blue">● B</span><span>— 亮度</span></div><p id="histogramStatus" class="histogram-note">正在读取预览…</p></section>
@@ -73,7 +73,7 @@
 <label class="source-toggle"><input id="sourceAll" type="checkbox" role="switch"><span>浏览本机所有照片<small>开启后选择磁盘，关闭后选择一个照片文件夹</small></span></label>
 <p class="source-mode-note">每次开启或关闭后，都需重新选择浏览范围；点击“应用并浏览”后生效。</p>
 <div id="sourceFolderFields"><label class="field-label">照片文件夹<input id="sourceFolderPath" placeholder="例如 D:\照片" autocomplete="off"></label><button id="sourceBrowse" type="button" class="secondary">浏览照片文件夹…</button></div>
-<div id="sourceDriveFields" class="hidden"><div class="source-drive-heading"><span>选择要扫描的磁盘</span><button id="sourceRecommended" type="button" class="secondary">选中建议磁盘</button></div><div id="sourceDriveChoices"></div><p>只扫描勾选的本机固定磁盘，跳过系统、程序、缓存、回收站及 Lightroom 预览目录。首次扫描可能较久，可以边扫描边浏览。G 盘默认不选。</p></div>
+<div id="sourceDriveFields" class="hidden"><div class="source-drive-heading"><span>选择要扫描的磁盘</span><div><button id="sourceRefresh" type="button" class="secondary">刷新设备</button><button id="sourceRecommended" type="button" class="secondary">选中建议磁盘</button></div></div><div id="sourceDriveChoices"></div><p>支持本机磁盘、SD 卡和 USB 外接存储，连接后自动刷新列表。只扫描勾选的设备，跳过系统、程序、缓存、回收站及 Lightroom 预览目录。外接设备和 G 盘默认不选。</p></div>
 <p id="sourceSelection" role="status"></p><p id="sourceError" class="error" role="alert"></p><div class="dialog-actions"><button type="button" class="secondary" data-close="sourceDialog">取消</button><button type="submit" class="primary" id="applySource">应用并浏览</button></div>
 </form></dialog>
 <dialog id="folderDialog" aria-labelledby="folderDialogTitle">

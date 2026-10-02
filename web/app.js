@@ -514,7 +514,7 @@ async function viewerPhoto(index, session = viewerSession) {
   }
   return session.pages.get(offset)[index - offset] || null;
 }
-// A bounded, decoded thumbnail cache shared by the strip and its Gaussian hover fan.
+// A bounded, decoded thumbnail cache shared by the strip and its single hover preview.
 const film = {
   session: null,
   rows: new Map(),
@@ -531,7 +531,7 @@ const film = {
   wheel: 0,
   raf: 0,
   slots: new Map(),
-  fans: new Map()
+  preview: null
 };
 const seek = {
   index: -1,
@@ -539,9 +539,6 @@ const seek = {
 };
 function filmRange(center, count, total) {
   return Math.max(0, Math.min(total - 1, Math.round(center))) - Math.floor(count / 2);
-}
-function filmWeight(distance) {
-  return .28 + .72 * Math.exp(-distance * distance / (2 * 1.05 * 1.05));
 }
 function filmReset(session) {
   for (const [key, entry] of film.cache) if (entry.error) film.cache.delete(key);
@@ -553,9 +550,9 @@ function filmReset(session) {
   film.target = -1;
   film.drag = null;
   film.slots.clear();
-  film.fans.clear();
+  film.preview = null;
   $('#filmRail').replaceChildren();
-  $('#seekFan').replaceChildren();
+  $('#seekHoverPreview').replaceChildren();
   hideSeekPreview();
 }
 function filmEntry(index) {
@@ -655,7 +652,7 @@ function filmDraw(node, index) {
       const ctx = canvas.getContext('2d'),
         im = entry.image;
       // Keep native proportions in the canvas. The compact row fills its tiles;
-      // the enlarged fan uses the true aspect ratio without letterbox gaps.
+      // the single enlarged hover card preserves the photo's aspect ratio.
       canvas.width = im.naturalWidth;
       canvas.height = im.naturalHeight;
       ctx.drawImage(im, 0, 0);
@@ -718,7 +715,7 @@ function filmPaint() {
   $('#filmEarlier').disabled = center <= 0;
   $('#filmLater').disabled = center >= film.session.total - 1;
   I18n.text($('#filmWindow'), T("附近 {0}\u2013{1} 张", number(Math.max(0, film.start) + 1), number(Math.min(film.session.total, film.start + film.count))));
-  if (film.index >= 0) filmPaintFan();
+  if (film.index >= 0) filmPaintPreview();
 }
 function filmWindow(index, recenter = false) {
   if (film.session !== viewerSession) filmReset(viewerSession);
@@ -735,56 +732,41 @@ function filmWindow(index, recenter = false) {
   filmPaint();
   filmPlan(index);
 }
-function filmPaintFan() {
+function filmPaintPreview() {
   const index = film.index,
-    total = film.session.total,
     wrap = $('#photoSeekWrap'),
-    fan = $('#seekFan');
-  const available = wrap.clientWidth - 8,
-    radius = available >= 820 ? 3 : available >= 460 ? 2 : 1;
-  const indices = [];
-  for (let i = Math.max(0, index - radius); i <= Math.min(total - 1, index + radius); i++) indices.push(i);
-  const weights = indices.map(i => filmWeight(i - index)),
-    aspects = indices.map(i => {
-      const entry = filmEntry(i), photo = film.rows.get(i);
-      return entry?.ready ? entry.image.naturalWidth / entry.image.naturalHeight : photo?.width && photo?.height ? photo.width / photo.height : 4 / 3;
-    }),
-    railRect = $('#filmRail').getBoundingClientRect(),
-    unit = Math.min(180, Math.max(40, railRect.bottom - 18), available / weights.reduce((sum, w, k) => sum + w * aspects[k], 0));
-  const widths = weights.map((w, k) => w * unit * aspects[k]),
-    totalWidth = widths.reduce((a, b) => a + b, 0),
-    centerSlot = indices.indexOf(index);
-  const centerOffset = widths.slice(0, centerSlot).reduce((a, b) => a + b, 0) + widths[centerSlot] / 2;
+    preview = $('#seekHoverPreview');
+  if (!film.session || index < 0 || index >= film.session.total) return;
+  let node = film.preview;
+  if (!node) {
+    node = filmCard('div', 'film-hover-card', index);
+    const caption = el('div', 'film-hover-caption'),
+      name = el('span', 'film-hover-name'),
+      meta = el('span', 'film-hover-meta');
+    name.id = 'seekPreviewName';
+    meta.id = 'seekPreviewMeta';
+    caption.append(name, meta);
+    node.append(caption);
+    film.preview = node;
+    preview.append(node);
+  }
   const rect = wrap.getBoundingClientRect(),
-    cell = film.slots.get(index)?.getBoundingClientRect();
-  fan.style.bottom = Math.max(0, rect.bottom - railRect.bottom) + 'px';
-  const anchor = film.anchor ?? (cell ? cell.left + cell.width / 2 - rect.left : wrap.clientWidth / 2);
-  let x = Math.max(4, Math.min(wrap.clientWidth - totalWidth - 4, anchor - centerOffset));
-  const desired = new Set(indices);
-  for (let k = 0; k < indices.length; k++) {
-    const i = indices[k];
-    let node = film.fans.get(i);
-    if (!node) {
-      node = filmCard('div', 'film-fan-card', i);
-      film.fans.set(i, node);
-      fan.append(node);
-    }
-    node.classList.toggle('center', i === index);
-    node.style.left = x + widths[k] / 2 + 'px';
-    node.style.width = widths[k] + 'px';
-    node.style.height = weights[k] * unit + 'px';
-    node.style.zIndex = 10 - Math.abs(i - index);
-    filmDraw(node, i);
-    x += widths[k];
-  }
-  for (const [i, node] of film.fans) if (!desired.has(i)) {
-    node.remove();
-    film.fans.delete(i);
-  }
+    railRect = $('#filmRail').getBoundingClientRect(),
+    cell = film.slots.get(index)?.getBoundingClientRect(),
+    width = Math.max(80, Math.min(272, wrap.clientWidth - 12)),
+    minCenter = Math.min(width / 2 + 6, wrap.clientWidth / 2),
+    maxCenter = Math.max(minCenter, wrap.clientWidth - minCenter),
+    anchor = film.anchor ?? (cell ? cell.left + cell.width / 2 : rect.left + wrap.clientWidth / 2),
+    x = Math.max(minCenter, Math.min(maxCenter, anchor - rect.left));
+  preview.style.bottom = Math.max(0, wrap.clientHeight - (railRect.top - rect.top) + 10) + 'px';
+  node.style.left = x + 'px';
+  node.style.width = width + 'px';
+  filmDraw(node, index);
   const p = film.rows.get(index);
-  I18n.text($('#seekPreviewName'), p ? p.name : T("缩略图正在准备"));
-  I18n.text($('#seekPreviewMeta'), `${number(index + 1)} / ${number(total)}${p ? ' · ' + p.taken.slice(0, 10) : ''}`);
-  fan.classList.remove('hidden');
+  I18n.text(node.querySelector('.film-hover-name'), p ? p.name : T("缩略图正在准备"));
+  I18n.text(node.querySelector('.film-hover-meta'), `${number(index + 1)} / ${number(film.session.total)}${p ? ' · ' + p.taken.slice(0, 10) : ''}`);
+  preview.classList.remove('hidden');
+  preview.setAttribute('aria-hidden', 'false');
 }
 function paintSeek(index) {
   const total = viewerSession?.total || 0,
@@ -803,21 +785,20 @@ function hideSeekPreview() {
   seek.index = -1;
   film.index = -1;
   film.anchor = null;
-  $('#seekFan').classList.add('hidden');
-  I18n.text($('#seekPreviewName'), '');
-  I18n.text($('#seekPreviewMeta'), '');
+  $('#seekHoverPreview').classList.add('hidden');
+  $('#seekHoverPreview').setAttribute('aria-hidden', 'true');
   for (const node of film.slots.values()) node.classList.remove('hovered');
 }
-function previewSeek(index, anchor = null) {
+function previewSeek(index, pointerX = null) {
   if (!viewerSession) return;
   index = Math.max(0, Math.min(viewerSession.total - 1, index));
   seek.index = index;
   if (film.session !== viewerSession) filmReset(viewerSession);
   film.index = index;
-  film.anchor = anchor;
+  film.anchor = pointerX;
   filmPaint();
   filmPlan(index);
-  filmPaintFan();
+  filmPaintPreview();
 }
 const seekBar = $('#photoSeek'),
   filmRail = $('#filmRail');
@@ -836,14 +817,14 @@ function filmIndexAt(x) {
   return best;
 }
 filmRail.onpointermove = e => {
-  if (film.session) previewSeek(filmIndexAt(e.clientX));
+  if (film.session) previewSeek(filmIndexAt(e.clientX), e.clientX);
 };
 filmRail.onpointerdown = e => {
   if (e.button !== 0 || !film.session) return;
   e.preventDefault();
   film.drag = e.pointerId;
   filmRail.setPointerCapture(e.pointerId);
-  previewSeek(filmIndexAt(e.clientX));
+  previewSeek(filmIndexAt(e.clientX), e.clientX);
 };
 filmRail.onpointerup = e => {
   if (film.drag !== e.pointerId) return;
@@ -877,7 +858,7 @@ filmRail.addEventListener('wheel', e => {
     const steps = Math.sign(film.wheel) * Math.min(5, Math.floor(Math.abs(film.wheel) / 35));
     film.wheel = 0;
     filmShift(steps);
-    previewSeek(filmIndexAt(e.clientX));
+    previewSeek(filmIndexAt(e.clientX), e.clientX);
   }
 }, {
   passive: false
@@ -1340,35 +1321,61 @@ $('#showFileOutput').onclick = guard(() => api('/api/files/reveal', {}));
 
 // Source edits stay in this dialog until Apply. Changing mode clears the draft path.
 let sourceDraft = null,
-  sourceApplying = false;
+  sourceApplying = false,
+  sourceRefreshTimer = null,
+  sourceRefreshing = false;
 function paintSourceSettings() {
   const all = sourceDraft.mode === 'computer';
   $('#sourceAll').checked = all;
   $('#sourceFolderFields').classList.toggle('hidden', all);
   $('#sourceDriveFields').classList.toggle('hidden', !all);
   $('#sourceFolderPath').value = all ? '' : sourceDraft.roots[0] || '';
+  paintSourceDrives();
+  I18n.text($('#sourceError'), '');
+}
+function paintSourceDrives() {
+  const all = sourceDraft.mode === 'computer';
   const box = $('#sourceDriveChoices');
   box.replaceChildren();
-  for (const drive of sourceDraft.drives) {
+  const drives = [...sourceDraft.drives];
+  if (all) for (const path of sourceDraft.roots) {
+    if (!drives.some(d => d.path.toLowerCase() === path.toLowerCase()))
+      drives.push({path, ready: false, kind: 'offline'});
+  }
+  for (const drive of drives) {
     const label = el('label', 'source-drive'),
       input = document.createElement('input');
     input.type = 'checkbox';
     input.value = drive.path;
     input.checked = all && sourceDraft.roots.some(p => p.toLowerCase() === drive.path.toLowerCase());
+    input.disabled = sourceApplying || (drive.ready === false && !input.checked);
     input.onchange = () => {
       sourceDraft.roots = input.checked ? [...sourceDraft.roots, drive.path] : sourceDraft.roots.filter(p => p.toLowerCase() !== drive.path.toLowerCase());
       paintSourceApply();
     };
-    label.append(input, el('span', '', drive.path), el('small', '', drive.default ? T("本机固定磁盘") : T("默认不选")));
+    const name = el('span', 'source-drive-name', drive.label ? drive.path + ' · ' + drive.label : drive.path);
+    const types = {fixed: '本机固定磁盘', sd: 'SD / MMC 卡', usb: 'USB 外接存储', removable: '可移动磁盘 / 读卡器', offline: '设备未连接'};
+    let details = T(types[drive.kind] || '可移动磁盘 / 读卡器');
+    if (drive.ready === false) details = I18n.concat(details, ' · ', T('未就绪或无法读取'));
+    else if (drive.total_bytes) details = I18n.concat(details, ' · ', T('可用 {0} / {1} GB',
+      I18n.number(Math.round(drive.free_bytes / 1073741824)), I18n.number(Math.round(drive.total_bytes / 1073741824))));
+    label.classList.toggle('source-drive-offline', drive.ready === false);
+    label.append(input, name, el('small', '', details));
     box.append(label);
   }
-  if (!sourceDraft.drives.length) box.append(el('p', '', T("暂未找到可用的本机固定磁盘。")));
-  I18n.text($('#sourceError'), '');
+  if (!drives.length) box.append(el('p', '', T("暂未找到磁盘，请连接 SD 卡或外接存储后刷新。")));
   paintSourceApply();
 }
 function paintSourceApply() {
-  const ready = sourceDraft && sourceDraft.roots.length > 0;
-  $('#applySource').disabled = !ready;
+  const disconnected = sourceDraft?.mode === 'computer' && sourceDraft.roots.some(path =>
+    !sourceDraft.drives.some(d => d.path.toLowerCase() === path.toLowerCase() && d.ready !== false));
+  const ready = sourceDraft && sourceDraft.roots.length > 0 && !disconnected;
+  $('#applySource').disabled = sourceApplying || !ready;
+  $('#sourceRecommended').disabled = sourceApplying || !sourceDraft?.drives.some(d => d.default && d.ready !== false);
+  if (disconnected) {
+    I18n.text($('#sourceSelection'), T('所选设备未就绪，请重新连接或取消勾选。'));
+    return;
+  }
   I18n.text($('#sourceSelection'), ready ? sourceDraft.mode === 'computer' ? T("已选 {0} 个磁盘", sourceDraft.roots.length) : T("已选择照片文件夹") : T("请重新选择浏览范围"));
 }
 async function openSourceSettings() {
@@ -1380,7 +1387,31 @@ async function openSourceSettings() {
   };
   paintSourceSettings();
   $('#sourceDialog').showModal();
+  clearInterval(sourceRefreshTimer);
+  sourceRefreshTimer = setInterval(() => refreshSourceDrives(false), 4000);
 }
+async function refreshSourceDrives(manual = true) {
+  if (sourceApplying || sourceRefreshing || !$('#sourceDialog').open) return;
+  sourceRefreshing = true;
+  const draft = sourceDraft;
+  $('#sourceRefresh').disabled = true;
+  try {
+    const state = await api('/api/source');
+    if (!$('#sourceDialog').open || sourceDraft !== draft || sourceApplying) return;
+    const signature = drives => JSON.stringify(drives.map(({free_bytes, ...identity}) => identity));
+    if (manual || signature(state.drives) !== signature(sourceDraft.drives)) {
+      sourceDraft.drives = state.drives;
+      paintSourceDrives();
+    }
+    if (manual) I18n.text($('#sourceError'), '');
+  } catch (err) {
+    if ($('#sourceDialog').open && manual) I18n.text($('#sourceError'), I18n.errorText(err));
+  } finally {
+    sourceRefreshing = false;
+    $('#sourceRefresh').disabled = sourceApplying;
+  }
+}
+$('#sourceRefresh').onclick = () => refreshSourceDrives();
 $('#sourceSettings').onclick = $('#sourceSettingsTop').onclick = guard(openSourceSettings);
 $('#sourceAll').onchange = () => {
   sourceDraft.mode = $('#sourceAll').checked ? 'computer' : 'folder';
@@ -1402,7 +1433,7 @@ $('#sourceBrowse').onclick = () => openFolderBrowser({
   }
 });
 $('#sourceRecommended').onclick = () => {
-  sourceDraft.roots = sourceDraft.drives.filter(d => d.default).map(d => d.path);
+  sourceDraft.roots = sourceDraft.drives.filter(d => d.default && d.ready !== false).map(d => d.path);
   paintSourceSettings();
 };
 $('#sourceForm').onsubmit = async e => {
@@ -1423,12 +1454,14 @@ $('#sourceForm').onsubmit = async e => {
     for (const n of $('#sourceForm').elements) n.disabled = false;
     I18n.text($('#sourceError'), I18n.errorText(err));
     I18n.text(button, T("应用并浏览"));
-    paintSourceApply();
+    paintSourceDrives();
   }
 };
 $('#sourceDialog').addEventListener('cancel', e => {
   if (sourceApplying) e.preventDefault();
 });
 $('#sourceDialog').addEventListener('close', () => {
+  clearInterval(sourceRefreshTimer);
+  sourceRefreshTimer = null;
   I18n.text($('#applySource'), T("应用并浏览"));
 });

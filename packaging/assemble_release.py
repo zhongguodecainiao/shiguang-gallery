@@ -10,8 +10,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 PACK = ROOT / 'packaging'
-APP = ROOT / 'release-1.0.6' / '拾光图库'
-OUT = ROOT / '发布包' / '1.0.6'
+APP = ROOT / 'release-1.0.7' / '拾光图库'
+OUT = ROOT / '发布包' / '1.0.7'
 RUNTIME = ['app.py', 'ui_preferences.py', 'folder_actions.py', 'app_paths.py', 'photo_sources.py', 'release_notes.py', 'update_channel.py', 'user_data_backup.py', 'update_server.py', 'update-channel.example.json', 'file_actions.py', 'native_ops.py',
            'photo_info.py', 'photo_depth.py', 'photo_clipboard.py', 'photo_filters.py',
            'full_resolution.py', 'folder_browser.py', 'requirements.txt', 'shiguang.ico']
@@ -20,6 +20,7 @@ BUILD = ['setup.nsi', 'version_info.txt', 'README-发布版.txt',
          'README-源码.txt', 'build_release.ps1', 'assemble_release.py',
          'build_locales.py', 'qa_native_shell.cjs',
          'i18n-work/translations.tsv', 'i18n-work/keys.json']
+TESTS = ['test_user_data_backup.py', 'test_storage_drives.py', 'test_photo_sources.py', 'test_folder_browser.py']
 PACKAGES = ['Pillow', 'pillow-heif', 'rawpy', 'numpy', 'pywin32',
             'ExifRead', 'Send2Trash', 'pypng', 'pyinstaller', 'pywebview',
             'pythonnet', 'clr-loader', 'bottle', 'proxy-tools', 'cffi', 'pycparser']
@@ -70,7 +71,7 @@ def main():
     copy(PACK / 'README-发布版.txt', APP / '使用说明.txt')
     copy(ROOT / 'shiguang.ico', APP / 'shiguang-brand-v1.ico')
     copy(PACK / 'README-发布版.txt', OUT / '发布说明.txt')
-    source_zip = OUT / '拾光图库-1.0.6-源码.zip'
+    source_zip = OUT / '拾光图库-1.0.7-源码.zip'
     with zipfile.ZipFile(source_zip, 'w', zipfile.ZIP_DEFLATED) as z:
         for file in RUNTIME:
             z.write(ROOT / file, file)
@@ -78,6 +79,9 @@ def main():
             z.write(ROOT / 'web' / file, 'web/' + file)
         for file in BUILD:
             z.write(PACK / file, 'packaging/' + file)
+        z.write(PACK / 'qa_storage.cjs', 'packaging/qa_storage.cjs')
+        for file in TESTS:
+            z.write(ROOT / 'tests' / file, 'tests/' + file)
         z.write(ROOT / 'branding' / 'make_beta8_logo.py', 'branding/make_beta8_logo.py')
         z.write(ROOT / 'branding' / 'make_page_cursors.py', 'branding/make_page_cursors.py')
         z.write(ROOT / 'branding' / 'shiguang-logo-master.png', 'branding/shiguang-logo-master.png')

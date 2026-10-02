@@ -5,6 +5,39 @@ import threading
 from photo_sources import write_json
 
 CURRENT_RELEASE = {
+    'version': '1.0.7',
+    'summary': '支持 SD 卡与外接存储识别，并保留新版缩略图预览与数据保护。',
+    'sections': [
+        {'title': '照片来源', 'items': [
+            '支持本机磁盘、SD 卡和 USB 外接存储，连接后自动刷新列表。只扫描勾选的设备，跳过系统、程序、缓存、回收站及 Lightroom 预览目录。外接设备和 G 盘默认不选。',
+            '所选设备未就绪，请重新连接或取消勾选。',
+        ]},
+        {'title': '全屏照片浏览', 'items': [
+            '悬停缩略图时，在鼠标附近、缩略图带上方显示单张放大预览及照片名称。',
+        ]},
+        {'title': '数据与更新', 'items': [
+            '应用内更新开始安装前，在本机备份照片来源设置和各照片目录对应的图库数据库。',
+            '升级后若同一照片来源的收藏或相册记录意外缺失，会尝试从这次更新前的快照安全恢复；不会覆盖已有整理内容。',
+        ]},
+    ],
+}
+PREVIOUS_RELEASE_1_0_61 = {
+    'version': '1.0.61',
+    'summary': '全屏浏览改为悬停单张缩略图时显示上方放大预览卡片。',
+    'sections': [
+        {'title': '全屏照片浏览', 'items': [
+            '底部缩略图带保持固定排列，不再使用中心放大、两侧渐小的扇形效果。',
+            '悬停缩略图时，在鼠标附近、缩略图带上方显示单张放大预览及照片名称。',
+            '预览卡片自动限制在窗口范围内，不挡住正在悬停的小照片。',
+        ]},
+        {'title': '数据与更新', 'items': [
+            '应用内更新开始安装前，在本机备份照片来源设置和各照片目录对应的图库数据库。',
+            '升级后若同一照片来源的收藏或相册记录意外缺失，会尝试从这次更新前的快照安全恢复；不会覆盖已有整理内容。',
+            '保留 1.0.6 的数据保护与版本显示修复。',
+        ]},
+    ],
+}
+PREVIOUS_RELEASE_1_0_6 = {
     'version': '1.0.6',
     'summary': '更新记录可收起；升级前备份照片来源、收藏与相册数据。',
     'sections': [
@@ -124,6 +157,8 @@ CURRENT_NOTICE_ID = CURRENT_RELEASE['version'] + '-history'
 # The first beta predates release notes; its entry describes the shipped baseline.
 RELEASE_HISTORY = [
     CURRENT_RELEASE,
+    PREVIOUS_RELEASE_1_0_61,
+    PREVIOUS_RELEASE_1_0_6,
     PREVIOUS_RELEASE_1_0_5,
     PREVIOUS_RELEASE_1_0_4,
     PREVIOUS_RELEASE_1_0_3,
